@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1f6feb">
+
+    <title>La Mia Auto</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f5f7;
+            color: #1f2937;
+            padding-bottom: 90px;
+        }
+
+        header {
+            background: #1f6feb;
+            color: white;
+            padding: 22px 18px;
+            border-radius: 0 0 24px 24px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 18px;
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .auto-card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        }
+
+        .auto-card h2 {
+            margin-bottom: 8px;
+        }
+
+        .targa {
+            display: inline-block;
+            background: #eef4ff;
+            color: #1f6feb;
+            padding: 6px 10px;
+            border-radius: 8px;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+        }
+
+        .stat-card span {
+            display: block;
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .stat-card strong {
+            font-size: 21px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin: 22px 0 12px;
+        }
+
+        .scadenza {
+            background: white;
+            border-radius: 14px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        .scadenza-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .scadenza-info p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .badge {
+            padding: 7px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .verde {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .giallo {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 4px;
+            box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        nav button {
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            color: #4b5563;
+            padding: 6px;
+        }
+
+        nav button span {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        nav button.active {
+            color: #1f6feb;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚗 La Mia Auto</h1>
+    <p>Tutto sotto controllo</p>
+</header>
+
+<main>
+
+    <section class="auto-card">
+        <h2>Toyota Aygo</h2>
+        <p>Anno 2017 · Benzina</p>
+        <div class="targa">INSERISCI TARGA</div>
+    </section>
+
+    <section class="stats">
+        <div class="stat-card">
+            <span>Chilometri</span>
+            <strong>0 km</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Spese del mese</span>
+            <strong>€ 0,00</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Prossima scadenza</span>
+            <strong>RCA</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Consumo medio</span>
+            <strong>-- km/l</strong>
+        </div>
+    </section>
+
+    <h2 class="section-title">Prossime scadenze</h2>
+
+    <div class="scadenza">
+        <div class="scadenza-info">
+            <h3>Assicurazione RCA</h3>
+            <p>Data da inserire</p>
+        </div>
+        <div class="badge giallo">Da compilare</div>
+    </div>
+
+    <div class="scadenza">
+        <div class="scadenza-info">
+            <h3>Revisione</h3>
+            <p>Data da inserire</p>
+        </div>
+        <div class="badge verde">Regolare</div>
+    </div>
+
+    <div class="scadenza">
+        <div class="scadenza-info">
+            <h3>Bollo auto</h3>
+            <p>Data da inserire</p>
+        </div>
+        <div class="badge giallo">Da compilare</div>
+    </div>
+
+</main>
+
+<nav>
+    <button class="active">
+        <span>🏠</span>
+        Home
+    </button>
+
+    <button>
+        <span>📅</span>
+        Scadenze
+    </button>
+
+    <button>
+        <span>💶</span>
+        Spese
+    </button>
+
+    <button>
+        <span>🔧</span>
+        Manutenzione
+    </button>
+</nav>
+
+</body>
+</html>
