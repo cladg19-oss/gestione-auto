@@ -13,7 +13,7 @@
     <div>
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.3.2</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.4.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
   <main class="container">
@@ -220,7 +220,7 @@
 
       <section class="settings-card">
         <h3>Novità</h3>
-        <p class="settings-copy"><strong>Versione 9.3.2 · Build 00048</strong></p>
+        <p class="settings-copy"><strong>Versione 9.4.0 · Build 00049</strong></p>
         <ul class="clean-list">
           <li>Nuovo archivio documenti con PDF, immagini, ricerca e anteprima.</li>
           <li>Confronto delle spese con il mese precedente.</li>
@@ -231,7 +231,7 @@
 
       <section class="settings-card">
         <h3>🚧 Roadmap</h3>
-        <div class="roadmap-item"><span>9.3.2</span><p>✅ Riconoscimento certo dal nome file per certificato di proprietà e carta/libretto di circolazione, anche con OCR incompleto.</p></div>
+        <div class="roadmap-item"><span>9.4.0</span><p>✅ Riconoscimento certo dal nome file per certificato di proprietà e carta/libretto di circolazione, anche con OCR incompleto.</p></div>
         <div class="roadmap-item"><span>9.3.1</span><p>✅ OCR corretto: libretto di circolazione e certificato di proprietà sono riconosciuti come documenti distinti.</p></div>
         <div class="roadmap-item"><span>9.2.3</span><p>✅ OCR più affidabile, indice di confidenza e correzione manuale del tipo documento.</p></div>
         <div class="roadmap-item"><span>9.2.2</span><p>✅ Riconoscimento corretto del libretto e classificazione OCR con punteggio di affidabilità.</p></div>
@@ -248,7 +248,7 @@
         <h3>ℹ️ Informazioni</h3>
         <dl>
           <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
-          <div><dt>Versione</dt><dd>9.3.2</dd></div>
+          <div><dt>Versione</dt><dd>9.4.0</dd></div>
           <div><dt>Build</dt><dd>00048</dd></div>
           <div><dt>Aggiornamento</dt><dd>26 luglio 2026</dd></div>
         </dl>
@@ -437,6 +437,9 @@
   <script src="js/events.js"></script>
   <script src="app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <script src="js/documents.js?v=00048"></script>
+  <script src="js/ocr/documentClassifier.js?v=00049"></script>
+  <script src="js/ocr/parsers/librettoParser.js?v=00049"></script>
+  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00049"></script>
+  <script src="js/documents.js?v=00049"></script>
 </body>
 </html>

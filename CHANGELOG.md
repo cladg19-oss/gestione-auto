@@ -1,3 +1,12 @@
+# 9.4.0 — Fondazione OCR modulare (Build 00049)
+
+- Separato il classificatore documenti in `js/ocr/documentClassifier.js`.
+- Creato un parser dedicato per la carta/libretto di circolazione.
+- Creato un parser dedicato per il certificato di proprietà.
+- `documents.js` ora orchestra i moduli invece di contenere tutta la logica OCR.
+- Nessuna modifica alla chiave dati `miaAutoDataV2`.
+- Comportamento della 9.3.2 preservato.
+
 # Versione 9.3.2 — Build 00048
 
 - Corretto il caso reale in cui un PDF scansionato veniva riconosciuto come documento generico.

@@ -147,43 +147,14 @@
     return String(value||'').replace(/\s+/g,' ').replace(/[|;]+$/,'').trim();
   }
   function registrationFields(text){
-    const make=cleanVehicleText(matchValue(text,[
-      /(?:\bD\.1\b|marca)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 .'-]{1,30})/i,
-      /(?:costruttore)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 .'-]{1,30})/i
-    ]));
-    const model=cleanVehicleText(matchValue(text,[
-      /(?:\bD\.3\b|denominazione commerciale|modello)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 ._\/-]{1,45})/i
-    ]));
-    const vin=matchValue(text,[
-      /(?:\bE\b|numero (?:del )?telaio|telaio|vin)\s*[:\-]?\s*([A-HJ-NPR-Z0-9]{11,17})/i,
-      /\b([A-HJ-NPR-Z0-9]{17})\b/i
-    ]).replace(/\s/g,'').toUpperCase();
-    const firstRegistration=firstDate(text,['prima immatricolazione','data di prima immatricolazione','immatricolazione','\bB\b']);
-    const displacement=numberFrom(matchValue(text,[/(?:\bP\.1\b|cilindrata)\s*[:\-]?\s*(\d{2,5})/i]));
-    const powerKw=numberFrom(matchValue(text,[/(?:\bP\.2\b|potenza(?: massima)?(?: netta)?(?: in kw)?)\s*[:\-]?\s*(\d{1,3}(?:[.,]\d)?)/i]));
-    const seats=numberFrom(matchValue(text,[/(?:\bS\.1\b|posti a sedere|numero posti)\s*[:\-]?\s*(\d{1,2})/i]));
-    let fuel=cleanVehicleText(matchValue(text,[/(?:\bP\.3\b|alimentazione|combustibile)\s*[:\-]?\s*([A-ZÀ-Ü /-]{3,30})/i]));
-    const fuelLower=fuel.toLocaleLowerCase('it-IT');
-    if(/benzina/.test(fuelLower))fuel='Benzina';
-    else if(/gasolio|diesel/.test(fuelLower))fuel='Diesel';
-    else if(/elettric/.test(fuelLower))fuel='Elettrica';
-    else if(/ibrid/.test(fuelLower))fuel='Ibrida';
-    else if(/gpl/.test(fuelLower))fuel='GPL';
-    else if(/metano/.test(fuelLower))fuel='Metano';
-    return {make,model,vin,firstRegistration,displacement,powerKw,seats,fuel};
+    const parser=window.MiaAutoLibrettoParser;
+    if(!parser?.parse)throw new Error('Parser libretto non caricato.');
+    return parser.parse(text);
   }
   function ownershipFields(text){
-    const owner=cleanVehicleText(matchValue(text,[
-      /(?:proprietario|intestatario)\s*[:\-]?\s*([A-ZÀ-Ü][A-ZÀ-Ü' .-]{3,70})/i,
-      /(?:cognome e nome|denominazione sociale)\s*[:\-]?\s*([A-ZÀ-Ü][A-ZÀ-Ü' .-]{3,70})/i
-    ]));
-    const ownerTaxCode=matchValue(text,[/(?:codice fiscale)\s*[:\-]?\s*([A-Z0-9]{16})/i,/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/i]).toUpperCase();
-    const certificateNumber=matchValue(text,[/(?:certificato di propriet[aà]\s*(?:n\.?|numero)?|\bn\.)\s*[:\-]?\s*([A-Z0-9\/.-]{5,30})/i]);
-    const cdpdId=matchValue(text,[/(?:id\s*cdpd)\s*[:\-]?\s*([A-Z0-9_-]{8,80})/i]);
-    let liens='';
-    if(/non risultano iscritte ipoteche|nessun(?:a)? (?:gravame|ipoteca)/i.test(text))liens='Nessun gravame o ipoteca risultante';
-    else if(/gravami|ipoteche/i.test(text))liens='Presenza di annotazioni da controllare';
-    return {owner,ownerTaxCode,certificateNumber,cdpdId,liens};
+    const parser=window.MiaAutoCertificatoProprietaParser;
+    if(!parser?.parse)throw new Error('Parser certificato di proprietà non caricato.');
+    return parser.parse(text);
   }
   function bestAmount(text){
     const patterns=[
@@ -207,87 +178,9 @@
     return lines.slice(0,12).find(line=>line.length>3&&line.length<80&&!skip.test(line)&&!/^\d/.test(line))||'';
   }
   function classify(text,fileName=''){
-    const body=normalizeText(text).toLocaleLowerCase('it-IT');
-    const name=String(fileName||'').replace(/[_-]+/g,' ').toLocaleLowerCase('it-IT');
-    // Il nome assegnato dall’utente è determinante per i documenti ufficiali.
-    // Questo evita che un PDF scansionato, con OCR parziale, venga classificato
-    // come generico solo perché l’intestazione non è stata letta.
-    const ownershipFile=/certificato.{0,12}(?:di\s+)?propriet[aà]|\bcdpd\b|certificato.{0,8}pra/.test(name);
-    const registrationFile=/(?:carta|libretto).{0,12}(?:di\s+)?circolazione|certificato.{0,12}immatricolazione/.test(name);
-    const scores={registration:0,ownership:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0,generic:0};
-    const reasons={};
-    const add=(kind,points,re,label,scope=body)=>{
-      if(re.test(scope)){
-        scores[kind]+=points;
-        (reasons[kind]??=[]).push(label||String(re));
-      }
-    };
-
-    // Il nome del file è un indizio forte, ma non basta da solo per creare eventi economici.
-    add('registration',18,/carta.{0,8}circolazione|libretto|circolazione/, 'nome file: libretto',name);
-    add('ownership',24,/certificato.{0,8}(?:di )?propriet[aà]|certificato propriet[aà]|cdpd/, 'nome file: certificato di proprietà',name);
-    add('revision',15,/revisione|revisioni/, 'nome file: revisione',name);
-    add('insurance',15,/rca|assicurazione|polizza/, 'nome file: assicurazione',name);
-    add('tax',15,/bollo|tassa automobilistica/, 'nome file: bollo',name);
-    add('fuel',12,/carburante|rifornimento|benzinaio|scontrino/, 'nome file: carburante',name);
-    add('tires',12,/gomme|pneumatici/, 'nome file: gomme',name);
-    add('maintenance',10,/tagliando|manutenzione|officina|fattura/, 'nome file: manutenzione',name);
-
-    // Certificato di proprietà/PRA: documento giuridico distinto dal libretto.
-    add('ownership',42,/certificato di propriet[aà]|certificato digitale di propriet[aà]|\bcdpd\b/, 'intestazione certificato di proprietà');
-    add('ownership',24,/pubblico registro automobilistico|\bpra\b/, 'ente PRA');
-    add('ownership',22,/gravami[, e]*ipoteche|non risultano iscritte ipoteche|dati dell['’]intestazione/, 'gravami e intestazione');
-    add('ownership',12,/numero (?:precedenti )?intestatari|\bproprietario\b[\s\S]{0,100}\bcodice fiscale\b/, 'dati proprietario');
-
-    // Segnali strutturali specifici della carta di circolazione italiana/UE.
-    add('registration',30,/carta di circolazione|certificato di immatricolazione/, 'intestazione ufficiale');
-    add('registration',14,/ministero delle infrastrutture|repubblica italiana/, 'ente emittente');
-    add('registration',12,/numero di omologazione|numero del telaio|identificazione del veicolo|vin/, 'telaio/VIN');
-    add('registration',10,/cilindrata|massa complessiva|massa a vuoto|potenza massima|prima immatricolazione/, 'dati tecnici');
-    add('registration',10,/\b(?:a\.1|c\.1\.1|c\.2\.1|d\.1|d\.2|d\.3|e|f\.1|j|p\.1|p\.2|p\.3|s\.1)\b/i, 'campi armonizzati UE');
-    add('registration',8,/\btarga\b[\s\S]{0,160}\btelaio\b|\bveicolo\b[\s\S]{0,160}\bcilindrata\b/, 'struttura veicolo');
-
-    add('revision',24,/certificato di revisione|esito della revisione|rapporto di revisione/, 'certificato revisione');
-    add('revision',12,/revisione[\s\S]{0,80}(regolare|ripetere|sospeso)|prossima revisione/, 'esito/scadenza revisione');
-    add('revision',6,/centro revisioni|mctc/, 'centro revisione');
-
-    // Un rifornimento richiede indicatori economici e di quantità; "benzina" da sola vale quasi zero.
-    add('fuel',18,/prezzo\s*(?:al|per)?\s*litro|€\s*\/\s*l|eur\s*\/\s*l/, 'prezzo al litro');
-    add('fuel',16,/litri\s*(?:erogati|totali)?|volume\s*erogato|quantit[aà]\s*litri/, 'litri erogati');
-    add('fuel',14,/erogazione|pompa\s*\d+|self service|distributore carburanti/, 'impianto carburante');
-    add('fuel',12,/documento commerciale[\s\S]{0,180}(benzina|gasolio|diesel|gpl|carburante)/, 'documento commerciale carburante');
-    add('fuel',2,/\bbenzina\b|\bgasolio\b|\bdiesel\b|\bgpl\b/, 'tipo carburante');
-
-    add('insurance',22,/certificato di assicurazione|contratto di assicurazione|polizza\s*(?:n|numero)|rc auto|r\.c\.a\.?/, 'polizza RCA');
-    add('insurance',9,/compagnia assicur|premio assicurativo|attestato di rischio/, 'dati assicurativi');
-    add('tax',22,/bollo auto|tassa automobilistica|avviso di scadenza bollo/, 'bollo auto');
-    add('tax',9,/aci[\s\S]{0,80}bollo|regione[\s\S]{0,80}automobil/, 'ente bollo');
-    add('tires',18,/pneumatici|equilibratura|convergenza|cambio gomme|montaggio gomme/, 'lavori gomme');
-    add('maintenance',15,/tagliando|manodopera|ricambi|olio motore|filtro olio|officina/, 'manutenzione');
-    add('maintenance',5,/fattura|preventivo/, 'documento fiscale');
-
-    // Penalità anti-falso-positivo: il libretto può contenere alimentazione "benzina".
-    if(scores.registration>=20){scores.fuel=Math.max(0,scores.fuel-12);scores.maintenance=Math.max(0,scores.maintenance-4);}
-    if(scores.ownership>=24){scores.registration=Math.max(0,scores.registration-18);scores.fuel=0;scores.maintenance=Math.max(0,scores.maintenance-5);}
-    const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-    const [best,score]=ranked[0];
-    const second=ranked[1]?.[1]||0;
-    let kind=best;
-    if(score<8||((score-second)<4&&score<20))kind='generic';
-    // Fallback esplicito sul nome del file per certificato di proprietà e libretto.
-    // Ha priorità sulla lettura OCR incompleta, ma non crea eventi economici.
-    if(ownershipFile){
-      kind='ownership';
-      scores.ownership=Math.max(scores.ownership,80);
-      (reasons.ownership??=[]).push('nome file ufficiale: certificato di proprietà');
-    }else if(registrationFile){
-      kind='registration';
-      scores.registration=Math.max(scores.registration,75);
-      (reasons.registration??=[]).push('nome file ufficiale: carta/libretto di circolazione');
-    }
-    const finalScore=scores[kind]||score;
-    const confidence=kind==='generic'?Math.min(55,Math.max(20,finalScore*4)):Math.min(99,Math.round(55+finalScore*1.4+Math.max(0,finalScore-second)*1.5));
-    return {kind,confidence,scores,reasons:reasons[kind]||[]};
+    const classifier=window.MiaAutoDocumentClassifier;
+    if(!classifier?.classify)throw new Error('Modulo classificatore OCR non caricato.');
+    return classifier.classify(text,fileName);
   }
   function extractData(rawText,fileName=''){
     const text=normalizeText(rawText);
