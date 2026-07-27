@@ -13,7 +13,7 @@
     <div>
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.6.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.7.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
   <main class="container">
@@ -77,6 +77,15 @@
           <span id="healthBadge" class="health-badge ok">Tutto regolare</span>
         </div>
         <div id="healthList" class="health-list"></div>
+      </section>
+
+      <section class="quick-check-card">
+        <div>
+          <span class="vehicle-label">Verifica guidata</span>
+          <h2>Controllo rapido</h2>
+          <p>Analizza scadenze, manutenzioni e dati principali del veicolo.</p>
+        </div>
+        <button id="quickCheckBtn" class="primary" type="button">Avvia controllo</button>
       </section>
 
       <section class="insight-grid">
@@ -162,66 +171,8 @@
     </section>
 
     <section id="garage" class="view">
-      <div class="section-heading garage-heading">
-        <div><p class="eyebrow dark">Il tuo garage</p><h2>Centro Veicolo</h2></div>
-        <span class="vehicle-center-status">1 veicolo</span>
-      </div>
-
-      <article class="garage-vehicle-card">
-        <div class="garage-vehicle-main">
-          <div class="garage-car-icon" aria-hidden="true">🚗</div>
-          <div>
-            <span class="vehicle-label">Veicolo principale</span>
-            <h2 id="garageVehicleName">Toyota Aygo</h2>
-            <p id="garageVehicleMeta">2017 · Benzina</p>
-            <span id="garageVehiclePlate" class="plate">TARGA</span>
-          </div>
-        </div>
-        <div class="garage-vehicle-km"><small>Chilometri</small><strong id="garageVehicleKm">0 km</strong></div>
-        <div class="garage-deadline-strip">
-          <div><small>Assicurazione</small><strong id="garageRcaStatus">Non inserita</strong></div>
-          <div><small>Revisione</small><strong id="garageRevisionStatus">Non inserita</strong></div>
-        </div>
-        <button id="openVehicleCenterBtn" class="primary full" type="button">Apri scheda completa →</button>
-      </article>
-
-      <section id="vehicleCenterPanel" class="vehicle-center-panel hidden">
-        <div class="vehicle-center-hero">
-          <button id="closeVehicleCenterBtn" class="vehicle-center-back" type="button">← Garage</button>
-          <div><span class="vehicle-label">Scheda digitale</span><h2 id="centerVehicleName">Toyota Aygo</h2><p id="centerVehicleMeta">2017 · Benzina · TARGA</p></div>
-          <div class="center-health"><strong id="centerHealthScore">0</strong><span>/100</span><small>Stato auto</small></div>
-        </div>
-
-        <section class="vehicle-center-stats">
-          <article><small>Documenti</small><strong id="centerDocumentsCount">0</strong></article>
-          <article><small>Scadenze</small><strong id="centerDeadlinesCount">0</strong></article>
-          <article><small>Manutenzioni</small><strong id="centerMaintenanceCount">0</strong></article>
-          <article><small>Costi totali</small><strong id="centerTotalCosts">€ 0,00</strong></article>
-        </section>
-
-        <section class="vehicle-center-menu" aria-label="Sezioni del veicolo">
-          <button type="button" data-center-open="documents"><span>📄</span><div><strong>Documenti</strong><small>Libretto, proprietà, RCA e fatture</small></div><b>›</b></button>
-          <button type="button" data-center-open="deadlines"><span>📅</span><div><strong>Scadenze</strong><small>Assicurazione, revisione, bollo e tagliando</small></div><b>›</b></button>
-          <button type="button" data-center-open="maintenance"><span>🔧</span><div><strong>Manutenzioni</strong><small>Interventi, officine e costi</small></div><b>›</b></button>
-          <button type="button" data-center-open="fuel"><span>⛽</span><div><strong>Rifornimenti</strong><small>Consumi, litri e distributori</small></div><b>›</b></button>
-          <button type="button" data-center-open="expenses"><span>💶</span><div><strong>Spese</strong><small>Tutti i costi del veicolo</small></div><b>›</b></button>
-          <button type="button" data-center-open="timeline"><span>🕘</span><div><strong>Timeline</strong><small>Storia completa dell’auto</small></div><b>›</b></button>
-        </section>
-
-        <section class="vehicle-data-card">
-          <div class="section-heading compact-heading"><h2>Dati del veicolo</h2><button id="editVehicleBtn" class="secondary" type="button">Modifica</button></div>
-          <dl class="vehicle-data-list">
-            <div><dt>Marca e modello</dt><dd id="centerDataName">—</dd></div>
-            <div><dt>Anno</dt><dd id="centerDataYear">—</dd></div>
-            <div><dt>Alimentazione</dt><dd id="centerDataFuel">—</dd></div>
-            <div><dt>Targa</dt><dd id="centerDataPlate">—</dd></div>
-            <div><dt>Chilometri</dt><dd id="centerDataKm">0 km</dd></div>
-          </dl>
-        </section>
-      </section>
-
-      <form id="vehicleForm" class="form-card vehicle-edit-form hidden">
-        <div class="section-heading compact-heading"><h2>Modifica veicolo</h2><button id="cancelVehicleEditBtn" class="secondary" type="button">Annulla</button></div>
+      <h2>Garage</h2>
+      <form id="vehicleForm" class="form-card">
         <label>Marca e modello<input id="vehicleNameInput" type="text" placeholder="Toyota Aygo"></label>
         <label>Anno<input id="vehicleYearInput" type="number" min="1900" max="2100" placeholder="2017"></label>
         <label>Alimentazione<input id="vehicleFuelInput" type="text" placeholder="Benzina"></label>
@@ -278,9 +229,9 @@
 
       <section class="settings-card">
         <h3>Novità</h3>
-        <p class="settings-copy"><strong>Versione 9.6.0 · Build 00054</strong></p>
+        <p class="settings-copy"><strong>Versione 9.5.2 · Build 00053</strong></p>
         <ul class="clean-list">
-          <li>Nuovo Centro Veicolo con scheda digitale, riepilogo e accesso rapido a tutte le sezioni.</li>
+          <li>Nuovo archivio documenti con PDF, immagini, ricerca e anteprima.</li>
           <li>Confronto delle spese con il mese precedente.</li>
           <li>Stato auto spiegato con criticità e azioni consigliate.</li>
           <li>Attività recenti riunite direttamente nella Home.</li>
@@ -306,9 +257,9 @@
         <h3>ℹ️ Informazioni</h3>
         <dl>
           <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
-          <div><dt>Versione</dt><dd>9.6.0</dd></div>
-          <div><dt>Build</dt><dd>00054</dd></div>
-          <div><dt>Aggiornamento</dt><dd>27 luglio 2026</dd></div>
+          <div><dt>Versione</dt><dd>9.5.2</dd></div>
+          <div><dt>Build</dt><dd>00052</dd></div>
+          <div><dt>Aggiornamento</dt><dd>26 luglio 2026</dd></div>
         </dl>
         <p class="storage-note">I dati e i documenti restano memorizzati sul dispositivo. Il backup JSON del Garage non include ancora i file dell’archivio documenti.</p>
       </section>
@@ -490,15 +441,24 @@
     </div>
   </dialog>
 
+  <dialog id="quickCheckModal">
+    <div class="modal-card quick-check-modal-card">
+      <div class="modal-head"><h3>Controllo rapido del veicolo</h3><button class="close" type="button">✕</button></div>
+      <div id="quickCheckSummary" class="quick-check-summary"></div>
+      <div id="quickCheckResults" class="quick-check-results"></div>
+      <button id="quickCheckClose" class="primary full" type="button">Chiudi</button>
+    </div>
+  </dialog>
+
   <script src="js/storage.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/events.js"></script>
   <script src="app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <script src="js/ocr/documentClassifier.js?v=00054"></script>
-  <script src="js/ocr/parsers/librettoParser.js?v=00054"></script>
-  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00054"></script>
-  <script src="js/ocr/parsers/assicurazioneParser.js?v=00054"></script>
-  <script src="js/documents.js?v=00054"></script>
+  <script src="js/ocr/documentClassifier.js?v=00052"></script>
+  <script src="js/ocr/parsers/librettoParser.js?v=00052"></script>
+  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00052"></script>
+  <script src="js/ocr/parsers/assicurazioneParser.js?v=00052"></script>
+  <script src="js/documents.js?v=00052"></script>
 </body>
 </html>

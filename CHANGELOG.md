@@ -1,13 +1,11 @@
 # Changelog
 
-## 9.6.0 — Build 00054
-
-- Nuovo Centro Veicolo nel Garage.
-- Scheda riepilogativa con dati auto, stato, scadenze, manutenzioni, documenti e costi.
-- Accesso rapido a Documenti, Scadenze, Manutenzioni, Rifornimenti, Spese e Timeline.
-- Modifica dei dati del veicolo separata dalla scheda riepilogativa.
-- Chiave dati invariata: `miaAutoDataV2`.
-- Aggiornata la cache PWA.
+## 9.7.0 - Controllo rapido
+- Aggiunto il pulsante **Avvia controllo** nella Dashboard.
+- Analisi guidata di RCA, revisione, bollo, manutenzione e dati del veicolo.
+- Segnalazione distinta tra elementi regolari, da verificare e scaduti.
+- Nessuna modifica alla chiave dati `miaAutoDataV2`.
+- Aggiornata la cache PWA alla build 00055.
 
 # 9.5.2 — Campi RCA contestuali (Build 00053)
 
