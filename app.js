@@ -453,6 +453,51 @@ function showTimelineDetail(event){
 }
 
 
+
+function yearlyCostGroups(){
+  const year=String(new Date().getFullYear());
+  const groups=[
+    {key:'fuel',label:'Carburante',icon:'⛽',value:data.fuel.filter(x=>x.date&&x.date.startsWith(year)).reduce((s,x)=>s+Number(x.total||0),0)},
+    {key:'maintenance',label:'Manutenzione',icon:'🔧',value:data.maintenance.filter(x=>x.date&&x.date.startsWith(year)).reduce((s,x)=>s+Number(x.cost||0),0)},
+    {key:'expenses',label:'Altre spese',icon:'💶',value:data.expenses.filter(x=>x.date&&x.date.startsWith(year)).reduce((s,x)=>s+Number(x.amount||0),0)}
+  ];
+  return groups;
+}
+function renderAnnualOverview(){
+  const groups=yearlyCostGroups();
+  const total=groups.reduce((sum,item)=>sum+item.value,0);
+  const totalEl=$('overviewYearTotal');
+  const box=$('costBreakdown');
+  if(totalEl)totalEl.textContent=money(total);
+  if(box)box.innerHTML=groups.map(item=>{
+    const percentage=total>0?Math.round((item.value/total)*100):0;
+    return `<article class="cost-row"><span class="cost-icon">${item.icon}</span><div><div><strong>${item.label}</strong><b>${money(item.value)}</b></div><div class="cost-track"><span style="width:${percentage}%"></span></div><small>${percentage}% del totale annuale</small></div></article>`;
+  }).join('');
+}
+function renderDataCompleteness(){
+  const checks=[
+    Boolean(data.vehicle.name&&data.vehicle.plate&&data.vehicle.year),
+    Number(data.vehicle.km||0)>0,
+    data.deadlines.some(x=>/assicur|rca/i.test(x.type||'')),
+    data.deadlines.some(x=>/revis/i.test(x.type||'')),
+    data.maintenance.length>0,
+    data.fuel.length>=2
+  ];
+  const completed=checks.filter(Boolean).length;
+  const percentage=Math.round((completed/checks.length)*100);
+  const text=$('dataCompletenessText'),bar=$('dataCompletenessBar'),hint=$('dataCompletenessHint');
+  if(text)text.textContent=`${percentage}%`;
+  if(bar)bar.style.width=`${percentage}%`;
+  if(hint)hint.textContent=percentage===100?'Profilo completo: tutte le analisi principali sono disponibili.':percentage>=67?'Mancano pochi dati per completare il profilo del veicolo.':'Aggiungi targa, scadenze, manutenzioni e rifornimenti per analisi più precise.';
+}
+function renderTodayLabel(){
+  const el=$('todayLabel');
+  if(!el)return;
+  const now=new Date();
+  const label=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long'}).format(now);
+  el.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+}
+
 function buildQuickCheck(){
   const checks=[];
   const deadlineDefinitions=[
@@ -519,7 +564,7 @@ function openQuickCheck(){
   modal.showModal();
 }
 
-function renderAll(){renderVehicle();renderStats();renderHealthScore();renderHealth();renderDeadlines();renderFuel();renderExpenses();renderMaintenance();renderChart();renderSmartDashboard();renderMonthComparison();renderSuggestions();renderRecentActivity();renderTimeline();}
+function renderAll(){renderVehicle();renderStats();renderHealthScore();renderHealth();renderDeadlines();renderFuel();renderExpenses();renderMaintenance();renderChart();renderSmartDashboard();renderMonthComparison();renderSuggestions();renderRecentActivity();renderTimeline();renderAnnualOverview();renderDataCompleteness();renderTodayLabel();}
 
 const timelineSearch=$('timelineSearch');
 if(timelineSearch)timelineSearch.addEventListener('input',()=>{timelineSearchTerm=timelineSearch.value;renderTimeline();});
@@ -547,29 +592,30 @@ if(settingsBtn)settingsBtn.addEventListener('click',()=>openView('settings'));
 document.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>openView(btn.dataset.open)));
 function openView(id){
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));
-  const timelineSearch=$('timelineSearch');
-if(timelineSearch)timelineSearch.addEventListener('input',()=>{timelineSearchTerm=timelineSearch.value;renderTimeline();});
-document.querySelectorAll('[data-timeline-filter]').forEach(btn=>btn.addEventListener('click',()=>{
-  activeTimelineFilter=btn.dataset.timelineFilter;
-  document.querySelectorAll('[data-timeline-filter]').forEach(item=>item.classList.toggle('active',item===btn));
-  renderTimeline();
-}));
-const timelineOpenSource=$('timelineOpenSource');
-if(timelineOpenSource)timelineOpenSource.addEventListener('click',()=>{
-  if(!selectedTimelineEvent)return;
-  $('timelineDetailModal').close();
-  openView(timelineSection(selectedTimelineEvent.type));
-});
-document.addEventListener('click',event=>{
-  const button=event.target.closest('[data-timeline-event]');
-  if(!button)return;
-  const item=window.MiaAutoEvents.buildTimeline(data).find(entry=>entry.id===button.dataset.timelineEvent);
-  if(item)showTimelineDetail(item);
-});
-
-document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+  const fabMenu=$('quickAddMenu');
+  const fab=$('quickAddFab');
+  if(fabMenu)fabMenu.classList.remove('open');
+  if(fab){fab.classList.remove('open');fab.setAttribute('aria-expanded','false');}
   window.scrollTo({top:0,behavior:'smooth'});
 }
+const quickAddFab=$('quickAddFab');
+const quickAddMenu=$('quickAddMenu');
+if(quickAddFab&&quickAddMenu){
+  quickAddFab.addEventListener('click',()=>{
+    const open=quickAddMenu.classList.toggle('open');
+    quickAddFab.classList.toggle('open',open);
+    quickAddFab.setAttribute('aria-expanded',String(open));
+    quickAddMenu.setAttribute('aria-hidden',String(!open));
+  });
+  document.addEventListener('click',event=>{
+    if(event.target.closest('.quick-add'))return;
+    quickAddMenu.classList.remove('open');
+    quickAddFab.classList.remove('open');
+    quickAddFab.setAttribute('aria-expanded','false');
+  });
+}
+
 document.querySelectorAll('[data-modal]').forEach(btn=>btn.addEventListener('click',()=>{
   const dialog=document.getElementById(btn.dataset.modal);
   const today=new Date().toISOString().slice(0,10);

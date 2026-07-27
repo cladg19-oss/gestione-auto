@@ -1,5 +1,15 @@
 # Changelog
 
+## 9.8.0 — Restyling completo e Centro Veicolo
+- Interfaccia generale ridisegnata con grafica più moderna e coerente.
+- Nuovo Centro Veicolo con accessi rapidi a profilo, documenti, timeline e scadenze.
+- Quadro annuale dei costi diviso tra carburante, manutenzione e altre spese.
+- Indicatore di completezza del profilo con suggerimenti contestuali.
+- Nuovo pulsante rapido per inserire rifornimenti, spese, manutenzioni e scadenze.
+- Navigazione desktop trasformata in barra laterale e navigazione mobile ottimizzata.
+- Tema scuro migliorato e correzione dei listener duplicati nella navigazione.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 ## 9.7.0 - Controllo rapido
 - Aggiunto il pulsante **Avvia controllo** nella Dashboard.
 - Analisi guidata di RCA, revisione, bollo, manutenzione e dati del veicolo.

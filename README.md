@@ -1,3 +1,8 @@
-# La Mia Auto V7.4
+# La Mia Auto
 
-Aggiunta la posizione anche alle revisioni e alle altre scadenze. È possibile inserire il nome del centro revisioni oppure acquisire la posizione GPS, quindi aprire il percorso con Google Maps o Waze dallo storico.
+PWA personale per gestire veicolo, scadenze, rifornimenti, spese, manutenzioni, timeline e documenti.
+
+**Versione:** 9.8.0 — Restyling completo e Centro Veicolo  
+**Build:** 00056
+
+I dati principali restano salvati nel browser con la chiave `miaAutoDataV2`.

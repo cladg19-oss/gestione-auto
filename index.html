@@ -11,9 +11,9 @@
 <body>
   <header class="topbar">
     <div>
-      <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
+      <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow" id="todayLabel">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.7.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.8.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
   <main class="container">
@@ -30,6 +30,13 @@
           <small>Stato auto</small>
         </div>
       </article>
+
+      <section class="vehicle-command-bar" aria-label="Centro veicolo">
+        <button type="button" data-open="garage"><span>🚙</span><div><small>Veicolo</small><strong>Profilo e chilometri</strong></div><b>›</b></button>
+        <button type="button" data-open="documents"><span>📂</span><div><small>Archivio</small><strong>Documenti dell’auto</strong></div><b>›</b></button>
+        <button type="button" data-open="timeline"><span>🕘</span><div><small>Cronologia</small><strong>Storia completa</strong></div><b>›</b></button>
+        <button type="button" data-open="deadlines"><span>🔔</span><div><small>Controllo</small><strong>Scadenze e avvisi</strong></div><b>›</b></button>
+      </section>
 
       <section class="smart-summary-grid">
         <article class="smart-card smart-deadline"><span class="smart-icon">📅</span><div><small>Prossima scadenza</small><strong id="smartNextDeadline">Nessuna</strong><p id="smartNextDeadlineDate">Aggiungi una scadenza</p></div></article>
@@ -92,6 +99,19 @@
         <article class="insight-card"><small>Spese anno</small><strong id="smartYearExpenses">€ 0,00</strong></article>
         <article class="insight-card"><small>Costo indicativo/km</small><strong id="smartCostKm">€ 0,00</strong></article>
         <article class="insight-card"><small>Manutenzioni registrate</small><strong id="smartMaintenanceCount">0</strong></article>
+      </section>
+
+      <section class="annual-overview">
+        <div class="overview-head">
+          <div><span class="vehicle-label">Quadro economico</span><h2>Spese dell’anno</h2></div>
+          <strong id="overviewYearTotal">€ 0,00</strong>
+        </div>
+        <div class="cost-breakdown" id="costBreakdown"></div>
+        <div class="data-completeness">
+          <div><strong>Completezza del profilo</strong><span id="dataCompletenessText">0%</span></div>
+          <div class="completeness-track"><span id="dataCompletenessBar"></span></div>
+          <p id="dataCompletenessHint">Completa i dati principali per ottenere analisi più precise.</p>
+        </div>
       </section>
 
       <div class="section-heading"><h2>Attività recenti</h2><span class="section-note">Tutta la storia più recente</span></div>
@@ -229,12 +249,12 @@
 
       <section class="settings-card">
         <h3>Novità</h3>
-        <p class="settings-copy"><strong>Versione 9.5.2 · Build 00053</strong></p>
+        <p class="settings-copy"><strong>Versione 9.8.0 · Build 00056</strong></p>
         <ul class="clean-list">
-          <li>Nuovo archivio documenti con PDF, immagini, ricerca e anteprima.</li>
-          <li>Confronto delle spese con il mese precedente.</li>
-          <li>Stato auto spiegato con criticità e azioni consigliate.</li>
-          <li>Attività recenti riunite direttamente nella Home.</li>
+          <li>Nuovo Centro Veicolo con accessi rapidi e interfaccia ridisegnata.</li>
+          <li>Quadro annuale dei costi diviso per categoria.</li>
+          <li>Indicatore di completezza del profilo e suggerimenti mirati.</li>
+          <li>Navigazione desktop, menu rapido mobile e tema scuro migliorato.</li>
         </ul>
       </section>
 
@@ -257,9 +277,9 @@
         <h3>ℹ️ Informazioni</h3>
         <dl>
           <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
-          <div><dt>Versione</dt><dd>9.5.2</dd></div>
-          <div><dt>Build</dt><dd>00052</dd></div>
-          <div><dt>Aggiornamento</dt><dd>26 luglio 2026</dd></div>
+          <div><dt>Versione</dt><dd>9.8.0</dd></div>
+          <div><dt>Build</dt><dd>00056</dd></div>
+          <div><dt>Aggiornamento</dt><dd>27 luglio 2026</dd></div>
         </dl>
         <p class="storage-note">I dati e i documenti restano memorizzati sul dispositivo. Il backup JSON del Garage non include ancora i file dell’archivio documenti.</p>
       </section>
@@ -276,6 +296,16 @@
     <button class="nav-btn" data-view="documents"><span>📂</span>Documenti</button>
     <button class="nav-btn" data-view="garage"><span>🚙</span>Garage</button>
   </nav>
+
+  <div class="quick-add">
+    <button id="quickAddFab" class="quick-add-fab" type="button" aria-expanded="false" aria-label="Aggiungi una nuova voce">＋</button>
+    <div id="quickAddMenu" class="quick-add-menu" aria-hidden="true">
+      <button type="button" data-modal="fuelModal"><span>⛽</span>Rifornimento</button>
+      <button type="button" data-modal="expenseModal"><span>💶</span>Spesa</button>
+      <button type="button" data-modal="maintenanceModal"><span>🔧</span>Manutenzione</button>
+      <button type="button" data-modal="deadlineModal"><span>📅</span>Scadenza</button>
+    </div>
+  </div>
 
   <dialog id="deadlineModal">
     <form id="deadlineForm" method="dialog" class="modal-card">
@@ -455,10 +485,10 @@
   <script src="js/events.js"></script>
   <script src="app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <script src="js/ocr/documentClassifier.js?v=00052"></script>
-  <script src="js/ocr/parsers/librettoParser.js?v=00052"></script>
-  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00052"></script>
-  <script src="js/ocr/parsers/assicurazioneParser.js?v=00052"></script>
-  <script src="js/documents.js?v=00052"></script>
+  <script src="js/ocr/documentClassifier.js?v=00056"></script>
+  <script src="js/ocr/parsers/librettoParser.js?v=00056"></script>
+  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00056"></script>
+  <script src="js/ocr/parsers/assicurazioneParser.js?v=00056"></script>
+  <script src="js/documents.js?v=00056"></script>
 </body>
 </html>
