@@ -1,3 +1,11 @@
+# 9.5.0 — Estrazione dati assicurazione (Build 00051)
+
+- Aggiunto parser dedicato `assicurazioneParser.js`.
+- Estrazione di compagnia, numero polizza, targa, decorrenza, scadenza, premio, classe di merito, contraente e garanzie.
+- I dati riconosciuti vengono mostrati prima del salvataggio e inseriti nelle note del documento.
+- La scadenza RCA importata riporta compagnia e numero polizza.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 # 9.4.1 — Correzione riconoscimento assicurazione (Build 00050)
 
 - I documenti Genertel e delle principali compagnie assicurative hanno ora priorità assicurativa.

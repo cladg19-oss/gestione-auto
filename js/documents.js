@@ -156,6 +156,11 @@
     if(!parser?.parse)throw new Error('Parser certificato di proprietà non caricato.');
     return parser.parse(text);
   }
+  function insuranceFields(text){
+    const parser=window.MiaAutoAssicurazioneParser;
+    if(!parser?.parse)throw new Error('Parser assicurazione non caricato.');
+    return parser.parse(text);
+  }
   function bestAmount(text){
     const patterns=[
       /(?:totale\s+(?:da\s+pagare|documento|fattura)?|importo\s+(?:pagato|totale)?|corrispettivo|pagato)\s*[:€]?\s*(\d{1,5}[.,]\d{2})/ig,
@@ -202,6 +207,7 @@
     const expiry=explicitExpiry||(kind==='revision'&&date?addYears(date,2):'');
     const registration=['registration','ownership'].includes(kind)?registrationFields(text):{};
     const ownership=kind==='ownership'?ownershipFields(text):{};
+    const insurance=kind==='insurance'?insuranceFields(text):{};
     const category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Altro'}[kind];
     const titleBase={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Documento'}[kind];
     const cleanFileName=fileName.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
@@ -211,13 +217,20 @@
     const title=['registration','ownership'].includes(kind)
       ? `${titleBase}${registrationName?` ${registrationName}`:''}`
       : `${titleBase}${date?` ${date.slice(0,4)}`:''}`;
-    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice,...registration,...ownership};
+    const insuranceDate=insurance.startDate||date;
+    const insuranceExpiry=insurance.expiry||expiry;
+    const insuranceAmount=insurance.premium!=null?insurance.premium:amount;
+    const insurancePlate=insurance.plate||plate;
+    const insurancePolicy=insurance.policyNumber||policy;
+    const fields={kind,confidence:classification.confidence,date:kind==='insurance'?insuranceDate:date,amount:kind==='insurance'?insuranceAmount:amount,location,business,plate:kind==='insurance'?insurancePlate:plate,km,liters,pricePerLiter,expiry:kind==='insurance'?insuranceExpiry:expiry,result,policy:kind==='insurance'?insurancePolicy:policy,invoice,...registration,...ownership,...insurance};
     const summaryParts=[];
-    if(amount!=null)summaryParts.push(`importo ${money(amount)}`);
+    if(fields.amount!=null)summaryParts.push(`importo ${money(fields.amount)}`);
+    if(fields.company)summaryParts.push(fields.company);
+    if(fields.policy)summaryParts.push(`polizza ${fields.policy}`);
     if(business)summaryParts.push(business);
     if(location)summaryParts.push(location);
     if(km)summaryParts.push(`${km.toLocaleString('it-IT')} km`);
-    if(expiry)summaryParts.push(`scadenza ${formatDate(expiry)}`);
+    if(fields.expiry)summaryParts.push(`scadenza ${formatDate(fields.expiry)}`);
     return {...fields,category,title,summary:summaryParts.join(' · '),text,fileName};
   }
 
@@ -249,7 +262,9 @@
       field('Luogo',extraction.location),field('Targa',extraction.plate),
       field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''),field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''),
       field('Prezzo/litro',extraction.pricePerLiter?`${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`:''),
-      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('N. polizza/fattura',extraction.policy||extraction.invoice),
+      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('Compagnia',extraction.company),field('N. polizza/fattura',extraction.policy||extraction.invoice),
+      field('Decorrenza polizza',extraction.startDate?formatDate(extraction.startDate):''),field('Premio',extraction.premium!=null?money(extraction.premium):''),
+      field('Classe di merito',extraction.meritClass),field('Contraente/assicurato',extraction.insured),field('Garanzie',Array.isArray(extraction.guarantees)?extraction.guarantees.join(', '):''),
       field('Marca',extraction.make),field('Modello',extraction.model),field('Telaio (VIN)',extraction.vin),
       field('Prima immatricolazione',extraction.firstRegistration?formatDate(extraction.firstRegistration):''),
       field('Alimentazione',extraction.fuel),field('Cilindrata',extraction.displacement?`${extraction.displacement.toLocaleString('it-IT')} cm³`:''),
@@ -307,7 +322,13 @@
     if(extraction.pricePerLiter)notes.push(`Prezzo al litro: ${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`);
     if(extraction.expiry)notes.push(`Scadenza: ${formatDate(extraction.expiry)}`);
     if(extraction.result)notes.push(`Esito: ${extraction.result}`);
+    if(extraction.company)notes.push(`Compagnia: ${extraction.company}`);
     if(extraction.policy)notes.push(`Polizza: ${extraction.policy}`);
+    if(extraction.startDate)notes.push(`Decorrenza: ${formatDate(extraction.startDate)}`);
+    if(extraction.premium!=null)notes.push(`Premio: ${money(extraction.premium)}`);
+    if(extraction.meritClass)notes.push(`Classe di merito: ${extraction.meritClass}`);
+    if(extraction.insured)notes.push(`Contraente/assicurato: ${extraction.insured}`);
+    if(Array.isArray(extraction.guarantees)&&extraction.guarantees.length)notes.push(`Garanzie: ${extraction.guarantees.join(', ')}`);
     if(extraction.invoice)notes.push(`Documento: ${extraction.invoice}`);
     if(extraction.make)notes.push(`Marca: ${extraction.make}`);
     if(extraction.model)notes.push(`Modello: ${extraction.model}`);
@@ -408,7 +429,7 @@
       data.maintenance.push({id:id(),type:`Revisione${extraction.result?` (${extraction.result})`:''}`,date,km:Number(extraction.km||0),cost:Number(extraction.amount||0),location:extraction.location||extraction.business||'',lat:null,lng:null,source:'document-ocr'});
       if(extraction.expiry)data.deadlines.push({id:id(),type:'Revisione',date:extraction.expiry,km:0,location:extraction.location||extraction.business||'',lat:null,lng:null,notes:'Scadenza ricavata automaticamente dal documento',source:'document-ocr'});
     }else if(extraction.kind==='insurance'&&extraction.expiry){
-      data.deadlines.push({id:id(),type:'Assicurazione RCA',date:extraction.expiry,km:0,location:extraction.business||'',lat:null,lng:null,notes:extraction.policy?`Polizza ${extraction.policy}`:'Scadenza ricavata automaticamente dal documento',source:'document-ocr'});
+      data.deadlines.push({id:id(),type:'Assicurazione RCA',date:extraction.expiry,km:0,location:extraction.business||'',lat:null,lng:null,notes:[extraction.company,extraction.policy?`Polizza ${extraction.policy}`:''].filter(Boolean).join(' · ')||'Scadenza ricavata automaticamente dal documento',source:'document-ocr'});
     }else if(extraction.kind==='tax'&&(extraction.expiry||extraction.date)){
       data.deadlines.push({id:id(),type:'Bollo auto',date:extraction.expiry||extraction.date,km:0,location:extraction.location||'',lat:null,lng:null,notes:'Data ricavata automaticamente dal documento',source:'document-ocr'});
     }else if(['tires','maintenance'].includes(extraction.kind)){
