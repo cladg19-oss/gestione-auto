@@ -1,3 +1,12 @@
+## 9.3.1 — Build 00047
+
+- Aggiunta la categoria separata **Certificato di proprietà**.
+- L’OCR riconosce intestazioni PRA, CDPD, gravami e ipoteche.
+- Il certificato di proprietà non viene più classificato come libretto di circolazione.
+- Estrazione dedicata di proprietario, codice fiscale, numero certificato, ID CDPD e situazione gravami/ipoteche.
+- Disattivata l’importazione automatica nella scheda veicolo per il certificato di proprietà: i dati restano da controllare e archiviare.
+- Cache PWA aggiornata alla Build 00047.
+
 # Changelog
 
 ## 9.3.0 — Build 00046

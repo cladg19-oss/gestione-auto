@@ -13,7 +13,7 @@
     <div>
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.3.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.3.1</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
   <main class="container">
@@ -192,7 +192,7 @@
         <label class="timeline-search"><span>🔎</span><input id="documentsSearch" type="search" placeholder="Cerca RCA, libretto, tagliando…" autocomplete="off"></label>
         <select id="documentsCategoryFilter" aria-label="Filtra per categoria">
           <option value="all">Tutte le categorie</option>
-          <option>Libretto di circolazione</option><option>Assicurazione RCA</option><option>Bollo auto</option>
+          <option>Libretto di circolazione</option><option>Certificato di proprietà</option><option>Assicurazione RCA</option><option>Bollo auto</option>
           <option>Revisione</option><option>Manutenzione e fatture</option><option>Gomme</option>
           <option>Foto del veicolo</option><option>Preventivi</option><option>Altro</option>
         </select>
@@ -220,7 +220,7 @@
 
       <section class="settings-card">
         <h3>Novità</h3>
-        <p class="settings-copy"><strong>Versione 9.3.0 · Build 00046</strong></p>
+        <p class="settings-copy"><strong>Versione 9.3.1 · Build 00047</strong></p>
         <ul class="clean-list">
           <li>Nuovo archivio documenti con PDF, immagini, ricerca e anteprima.</li>
           <li>Confronto delle spese con il mese precedente.</li>
@@ -231,7 +231,7 @@
 
       <section class="settings-card">
         <h3>🚧 Roadmap</h3>
-        <div class="roadmap-item"><span>9.3.0</span><p>✅ Importazione guidata: il libretto può aggiornare la scheda veicolo e i dati a bassa affidabilità richiedono controllo.</p></div>
+        <div class="roadmap-item"><span>9.3.1</span><p>✅ OCR corretto: libretto di circolazione e certificato di proprietà sono riconosciuti come documenti distinti.</p></div>
         <div class="roadmap-item"><span>9.2.3</span><p>✅ OCR più affidabile, indice di confidenza e correzione manuale del tipo documento.</p></div>
         <div class="roadmap-item"><span>9.2.2</span><p>✅ Riconoscimento corretto del libretto e classificazione OCR con punteggio di affidabilità.</p></div>
         <div class="roadmap-item"><span>9.2.1</span><p>✅ Scansione intelligente OCR e compilazione automatica dei dati.</p></div>
@@ -247,7 +247,7 @@
         <h3>ℹ️ Informazioni</h3>
         <dl>
           <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
-          <div><dt>Versione</dt><dd>9.3.0</dd></div>
+          <div><dt>Versione</dt><dd>9.3.1</dd></div>
           <div><dt>Build</dt><dd>00044</dd></div>
           <div><dt>Aggiornamento</dt><dd>26 luglio 2026</dd></div>
         </dl>
@@ -364,7 +364,7 @@
       <div class="modal-head"><h3>Nuovo documento</h3><button type="button" class="close">✕</button></div>
       <label>Titolo<input id="documentTitle" type="text" required maxlength="80" placeholder="Polizza RCA 2026"></label>
       <label>Categoria<select id="documentCategory" required>
-        <option value="">Scegli una categoria</option><option>Libretto di circolazione</option><option>Assicurazione RCA</option>
+        <option value="">Scegli una categoria</option><option>Libretto di circolazione</option><option>Certificato di proprietà</option><option>Assicurazione RCA</option>
         <option>Bollo auto</option><option>Revisione</option><option>Manutenzione e fatture</option><option>Gomme</option>
         <option>Foto del veicolo</option><option>Preventivi</option><option>Altro</option>
       </select></label>
@@ -381,6 +381,7 @@
         <label class="document-kind-correction">Tipo riconosciuto
           <select id="documentDetectedKind">
             <option value="registration">Libretto di circolazione</option>
+            <option value="ownership">Certificato di proprietà</option>
             <option value="fuel">Rifornimento carburante</option>
             <option value="revision">Revisione</option>
             <option value="insurance">Assicurazione RCA</option>

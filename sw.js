@@ -1,4 +1,4 @@
-const CACHE='mia-auto-v9-3-0-build-00046';
+const CACHE='mia-auto-v9-3-1-build-00047';
 const ASSETS=['./','./index.html','./style.css','./js/storage.js','./js/utils.js','./js/events.js','./js/documents.js','./app.js','./manifest.json'];
 self.addEventListener('install',event=>{
   self.skipWaiting();

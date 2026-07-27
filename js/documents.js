@@ -172,6 +172,19 @@
     else if(/metano/.test(fuelLower))fuel='Metano';
     return {make,model,vin,firstRegistration,displacement,powerKw,seats,fuel};
   }
+  function ownershipFields(text){
+    const owner=cleanVehicleText(matchValue(text,[
+      /(?:proprietario|intestatario)\s*[:\-]?\s*([A-ZÀ-Ü][A-ZÀ-Ü' .-]{3,70})/i,
+      /(?:cognome e nome|denominazione sociale)\s*[:\-]?\s*([A-ZÀ-Ü][A-ZÀ-Ü' .-]{3,70})/i
+    ]));
+    const ownerTaxCode=matchValue(text,[/(?:codice fiscale)\s*[:\-]?\s*([A-Z0-9]{16})/i,/\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b/i]).toUpperCase();
+    const certificateNumber=matchValue(text,[/(?:certificato di propriet[aà]\s*(?:n\.?|numero)?|\bn\.)\s*[:\-]?\s*([A-Z0-9\/.-]{5,30})/i]);
+    const cdpdId=matchValue(text,[/(?:id\s*cdpd)\s*[:\-]?\s*([A-Z0-9_-]{8,80})/i]);
+    let liens='';
+    if(/non risultano iscritte ipoteche|nessun(?:a)? (?:gravame|ipoteca)/i.test(text))liens='Nessun gravame o ipoteca risultante';
+    else if(/gravami|ipoteche/i.test(text))liens='Presenza di annotazioni da controllare';
+    return {owner,ownerTaxCode,certificateNumber,cdpdId,liens};
+  }
   function bestAmount(text){
     const patterns=[
       /(?:totale\s+(?:da\s+pagare|documento|fattura)?|importo\s+(?:pagato|totale)?|corrispettivo|pagato)\s*[:€]?\s*(\d{1,5}[.,]\d{2})/ig,
@@ -196,7 +209,7 @@
   function classify(text,fileName=''){
     const body=normalizeText(text).toLocaleLowerCase('it-IT');
     const name=String(fileName||'').replace(/[_-]+/g,' ').toLocaleLowerCase('it-IT');
-    const scores={registration:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0,generic:0};
+    const scores={registration:0,ownership:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0,generic:0};
     const reasons={};
     const add=(kind,points,re,label,scope=body)=>{
       if(re.test(scope)){
@@ -207,12 +220,19 @@
 
     // Il nome del file è un indizio forte, ma non basta da solo per creare eventi economici.
     add('registration',18,/carta.{0,8}circolazione|libretto|circolazione/, 'nome file: libretto',name);
+    add('ownership',24,/certificato.{0,8}(?:di )?propriet[aà]|certificato propriet[aà]|cdpd/, 'nome file: certificato di proprietà',name);
     add('revision',15,/revisione|revisioni/, 'nome file: revisione',name);
     add('insurance',15,/rca|assicurazione|polizza/, 'nome file: assicurazione',name);
     add('tax',15,/bollo|tassa automobilistica/, 'nome file: bollo',name);
     add('fuel',12,/carburante|rifornimento|benzinaio|scontrino/, 'nome file: carburante',name);
     add('tires',12,/gomme|pneumatici/, 'nome file: gomme',name);
     add('maintenance',10,/tagliando|manutenzione|officina|fattura/, 'nome file: manutenzione',name);
+
+    // Certificato di proprietà/PRA: documento giuridico distinto dal libretto.
+    add('ownership',42,/certificato di propriet[aà]|certificato digitale di propriet[aà]|\bcdpd\b/, 'intestazione certificato di proprietà');
+    add('ownership',24,/pubblico registro automobilistico|\bpra\b/, 'ente PRA');
+    add('ownership',22,/gravami[, e]*ipoteche|non risultano iscritte ipoteche|dati dell['’]intestazione/, 'gravami e intestazione');
+    add('ownership',12,/numero (?:precedenti )?intestatari|\bproprietario\b[\s\S]{0,100}\bcodice fiscale\b/, 'dati proprietario');
 
     // Segnali strutturali specifici della carta di circolazione italiana/UE.
     add('registration',30,/carta di circolazione|certificato di immatricolazione/, 'intestazione ufficiale');
@@ -243,6 +263,7 @@
 
     // Penalità anti-falso-positivo: il libretto può contenere alimentazione "benzina".
     if(scores.registration>=20){scores.fuel=Math.max(0,scores.fuel-12);scores.maintenance=Math.max(0,scores.maintenance-4);}
+    if(scores.ownership>=24){scores.registration=Math.max(0,scores.registration-18);scores.fuel=0;scores.maintenance=Math.max(0,scores.maintenance-5);}
     const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
     const [best,score]=ranked[0];
     const second=ranked[1]?.[1]||0;
@@ -257,9 +278,9 @@
     const classification=classify(text,fileName);
     const kind=classification.kind;
     const date=firstDate(text,['data revisione','data operazione','data documento','data emissione','data']);
-    const amount=kind==='registration'?null:bestAmount(text);
-    const location=kind==='registration'?'':findAddress(lines);
-    const business=kind==='registration'?'':findBusiness(lines);
+    const amount=['registration','ownership'].includes(kind)?null:bestAmount(text);
+    const location=['registration','ownership'].includes(kind)?'':findAddress(lines);
+    const business=['registration','ownership'].includes(kind)?'':findBusiness(lines);
     const plate=matchValue(text,[/(?:targa|veicolo)\s*[:\-]?\s*([A-Z]{2}\s*\d{3}\s*[A-Z]{2})/i,/\b([A-Z]{2}\d{3}[A-Z]{2})\b/i]).replace(/\s/g,'').toUpperCase();
     const km=numberFrom(matchValue(text,[/(?:km|chilometraggio|odometro)\s*[:\-]?\s*([\d. ]{3,8})/i,/([\d. ]{3,8})\s*km\b/i]));
     const liters=numberFrom(matchValue(text,[/(?:litri|volume|quantit[aà])\s*[:\-]?\s*(\d{1,3}[.,]\d{1,3})/i,/(\d{1,3}[.,]\d{1,3})\s*l(?:itri)?\b/i]));
@@ -269,17 +290,18 @@
     const policy=matchValue(text,[/(?:numero polizza|polizza n\.?|n\. polizza)\s*[:\-]?\s*([A-Z0-9\/-]+)/i]);
     const invoice=matchValue(text,[/(?:fattura|documento)\s*(?:n\.?|numero)?\s*[:\-]?\s*([A-Z0-9\/-]+)/i]);
     const expiry=explicitExpiry||(kind==='revision'&&date?addYears(date,2):'');
-    const registration=kind==='registration'?registrationFields(text):{};
-    const category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',generic:'Altro'}[kind];
-    const titleBase={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',generic:'Documento'}[kind];
+    const registration=['registration','ownership'].includes(kind)?registrationFields(text):{};
+    const ownership=kind==='ownership'?ownershipFields(text):{};
+    const category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Altro'}[kind];
+    const titleBase={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Documento'}[kind];
     const cleanFileName=fileName.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
-    const registrationName=kind==='registration'&&cleanFileName
-      ? cleanFileName.replace(/^(carta|libretto)\s+di\s+circolazione\s*/i,'').trim()
+    const registrationName=['registration','ownership'].includes(kind)&&cleanFileName
+      ? cleanFileName.replace(/^(?:(?:carta|libretto)\s+di\s+circolazione|certificato\s+di\s+propriet[aà])\s*/i,'').trim()
       : '';
-    const title=kind==='registration'
-      ? `Libretto di circolazione${registrationName?` ${registrationName}`:''}`
+    const title=['registration','ownership'].includes(kind)
+      ? `${titleBase}${registrationName?` ${registrationName}`:''}`
       : `${titleBase}${date?` ${date.slice(0,4)}`:''}`;
-    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice,...registration};
+    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice,...registration,...ownership};
     const summaryParts=[];
     if(amount!=null)summaryParts.push(`importo ${money(amount)}`);
     if(business)summaryParts.push(business);
@@ -310,7 +332,7 @@
     const panel=$('documentExtractedPanel');
     const fields=$('documentExtractedFields');
     if(!panel||!fields)return;
-    const kindLabel={fuel:'Rifornimento carburante',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione',registration:'Libretto',generic:'Documento generico'}[extraction.kind];
+    const kindLabel={fuel:'Rifornimento carburante',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Documento generico'}[extraction.kind];
     fields.innerHTML=[
       field('Tipo',kindLabel),field('Affidabilità',`${extraction.confidence||0}%`),field('Data',extraction.date?formatDate(extraction.date):''),
       field('Importo',extraction.amount!=null?money(extraction.amount):''),field('Attività',extraction.business),
@@ -321,7 +343,9 @@
       field('Marca',extraction.make),field('Modello',extraction.model),field('Telaio (VIN)',extraction.vin),
       field('Prima immatricolazione',extraction.firstRegistration?formatDate(extraction.firstRegistration):''),
       field('Alimentazione',extraction.fuel),field('Cilindrata',extraction.displacement?`${extraction.displacement.toLocaleString('it-IT')} cm³`:''),
-      field('Potenza',extraction.powerKw?`${extraction.powerKw.toLocaleString('it-IT')} kW`:''),field('Posti',extraction.seats)
+      field('Potenza',extraction.powerKw?`${extraction.powerKw.toLocaleString('it-IT')} kW`:''),field('Posti',extraction.seats),
+      field('Proprietario',extraction.owner),field('Codice fiscale proprietario',extraction.ownerTaxCode),
+      field('N. certificato',extraction.certificateNumber),field('ID CDPD',extraction.cdpdId),field('Gravami/ipoteche',extraction.liens)
     ].join('')||field('Risultato','Testo letto, ma nessun dato strutturato riconosciuto');
     panel.classList.remove('hidden');
     if($('documentDetectedKind'))$('documentDetectedKind').value=extraction.kind;
@@ -346,10 +370,10 @@
   function applyDetectedKind(kind){
     if(!currentExtraction||!kind)return;
     currentExtraction.kind=kind;
-    currentExtraction.category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',generic:'Altro'}[kind]||'Altro';
-    const labels={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',generic:'Documento'};
+    currentExtraction.category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Altro'}[kind]||'Altro';
+    const labels={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Documento'};
     currentExtraction.title=labels[kind]||'Documento';
-    if(kind==='registration'){
+    if(['registration','ownership'].includes(kind)){
       currentExtraction.amount=null;currentExtraction.location='';currentExtraction.business='';
       $('documentCreateEvent')&&( $('documentCreateEvent').checked=false );
     }
@@ -382,6 +406,11 @@
     if(extraction.fuel)notes.push(`Alimentazione: ${extraction.fuel}`);
     if(extraction.displacement)notes.push(`Cilindrata: ${extraction.displacement.toLocaleString('it-IT')} cm³`);
     if(extraction.powerKw)notes.push(`Potenza: ${extraction.powerKw.toLocaleString('it-IT')} kW`);
+    if(extraction.owner)notes.push(`Proprietario: ${extraction.owner}`);
+    if(extraction.ownerTaxCode)notes.push(`Codice fiscale proprietario: ${extraction.ownerTaxCode}`);
+    if(extraction.certificateNumber)notes.push(`N. certificato: ${extraction.certificateNumber}`);
+    if(extraction.cdpdId)notes.push(`ID CDPD: ${extraction.cdpdId}`);
+    if(extraction.liens)notes.push(`Gravami/ipoteche: ${extraction.liens}`);
     if(notes.length&&!$('documentNotes').value.trim())$('documentNotes').value=notes.join('\n').slice(0,500);
   }
 
