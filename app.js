@@ -134,6 +134,47 @@ function getFuelCalculations(){
   };
 }
 
+function deadlineByKeywords(keywords){
+  return selectCurrentDeadline(data.deadlines.filter(item=>keywords.some(key=>String(item.type||'').toLowerCase().includes(key))));
+}
+
+function deadlineCenterLabel(item){
+  if(!item)return 'Non inserita';
+  const days=daysUntil(item.date);
+  if(days<0)return `Scaduta · ${formatDate(item.date)}`;
+  if(days===0)return 'Scade oggi';
+  return `${formatDate(item.date)} · ${days} gg`;
+}
+
+function renderVehicleCenter(){
+  const v=data.vehicle;
+  const plate=(v.plate||'TARGA').toUpperCase();
+  const km=`${Number(v.km||0).toLocaleString('it-IT')} km`;
+  const meta=`${v.year||'Anno'} · ${v.fuel||'Alimentazione'}`;
+  const rca=deadlineByKeywords(['rca','assicur']);
+  const revision=deadlineByKeywords(['revis']);
+  const set=(id,value)=>{const el=$(id);if(el)el.textContent=value;};
+  set('garageVehicleName',v.name||'Veicolo');
+  set('garageVehicleMeta',meta);
+  set('garageVehiclePlate',plate);
+  set('garageVehicleKm',km);
+  set('garageRcaStatus',deadlineCenterLabel(rca));
+  set('garageRevisionStatus',deadlineCenterLabel(revision));
+  set('centerVehicleName',v.name||'Veicolo');
+  set('centerVehicleMeta',`${meta} · ${plate}`);
+  set('centerHealthScore',String(healthScoreCalc()));
+  set('centerDeadlinesCount',String(data.deadlines.length));
+  set('centerMaintenanceCount',String(data.maintenance.length));
+  set('centerTotalCosts',money(totalExpensesAll()));
+  set('centerDataName',v.name||'—');
+  set('centerDataYear',v.year||'—');
+  set('centerDataFuel',v.fuel||'—');
+  set('centerDataPlate',plate);
+  set('centerDataKm',km);
+  const documentsCount=$('documentsCount');
+  set('centerDocumentsCount',documentsCount?documentsCount.textContent:'0');
+}
+
 function renderVehicle(){
   const v=data.vehicle;
   vehicleName.textContent=v.name||'Veicolo';
@@ -145,6 +186,7 @@ function renderVehicle(){
   vehicleFuelInput.value=v.fuel||'';
   vehiclePlateInput.value=v.plate||'';
   vehicleKmInput.value=v.km||0;
+  renderVehicleCenter();
 }
 
 function renderStats(){
@@ -537,10 +579,36 @@ if(expenseUseLocation)expenseUseLocation.addEventListener('click',()=>captureLoc
 if(maintenanceUseLocation)maintenanceUseLocation.addEventListener('click',()=>captureLocation('maintenance',maintenanceLocationStatus));
 if(deadlineUseLocation)deadlineUseLocation.addEventListener('click',()=>captureLocation('deadline',deadlineLocationStatus));
 
+const garageVehicleCard=document.querySelector('.garage-vehicle-card');
+const vehicleCenterPanel=$('vehicleCenterPanel');
+const vehicleEditForm=$('vehicleForm');
+function showVehicleCenter(show=true){
+  if(garageVehicleCard)garageVehicleCard.classList.toggle('hidden',show);
+  if(vehicleCenterPanel)vehicleCenterPanel.classList.toggle('hidden',!show);
+  if(vehicleEditForm)vehicleEditForm.classList.add('hidden');
+  renderVehicleCenter();
+}
+const openVehicleCenterBtn=$('openVehicleCenterBtn');
+if(openVehicleCenterBtn)openVehicleCenterBtn.addEventListener('click',()=>showVehicleCenter(true));
+const closeVehicleCenterBtn=$('closeVehicleCenterBtn');
+if(closeVehicleCenterBtn)closeVehicleCenterBtn.addEventListener('click',()=>showVehicleCenter(false));
+const editVehicleBtn=$('editVehicleBtn');
+if(editVehicleBtn)editVehicleBtn.addEventListener('click',()=>{
+  if(vehicleCenterPanel)vehicleCenterPanel.classList.add('hidden');
+  if(vehicleEditForm)vehicleEditForm.classList.remove('hidden');
+});
+const cancelVehicleEditBtn=$('cancelVehicleEditBtn');
+if(cancelVehicleEditBtn)cancelVehicleEditBtn.addEventListener('click',()=>showVehicleCenter(true));
+document.querySelectorAll('[data-center-open]').forEach(button=>button.addEventListener('click',()=>openView(button.dataset.centerOpen)));
+const documentsCountNode=$('documentsCount');
+if(documentsCountNode&&window.MutationObserver){
+  new MutationObserver(()=>renderVehicleCenter()).observe(documentsCountNode,{childList:true,characterData:true,subtree:true});
+}
+
 vehicleForm.addEventListener('submit',e=>{
   e.preventDefault();
   data.vehicle={name:vehicleNameInput.value.trim(),year:vehicleYearInput.value,fuel:vehicleFuelInput.value.trim(),plate:vehiclePlateInput.value.trim().toUpperCase(),km:Number(vehicleKmInput.value||0)};
-  saveData();openView('home');
+  saveData();showVehicleCenter(true);openView('garage');
 });
 deadlineForm.addEventListener('submit',e=>{
   e.preventDefault();
