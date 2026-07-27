@@ -27,3 +27,8 @@
 - [x] 9.2.0 Archivio documenti locale
 - [ ] 9.2.1 Collegamento documenti a scadenze e manutenzioni
 - [ ] 9.3.0 Assistente intelligente
+
+
+## 9.3.0 — Importazione guidata (completata)
+- Aggiornamento scheda veicolo dal libretto.
+- Blocco prudenziale dell’importazione sotto il 70% di affidabilità.

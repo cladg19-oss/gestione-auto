@@ -1,5 +1,12 @@
 # Changelog
 
+## 9.3.0 — Build 00046
+- Il libretto estrae marca, modello, telaio, prima immatricolazione, alimentazione, cilindrata, potenza e posti.
+- Possibilità di aggiornare la scheda veicolo direttamente dal documento.
+- Importazione automatica disattivata quando l’affidabilità è inferiore al 70%.
+- Avviso esplicito quando i dati richiedono controllo manuale.
+- Corrette le espressioni regolari dei campi armonizzati UE.
+
 ## 9.2.3 — Build 00045
 - Classificazione OCR rafforzata con segnali strutturali specifici per ogni documento.
 - La sola parola benzina non basta più a classificare un libretto come rifornimento.

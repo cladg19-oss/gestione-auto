@@ -98,3 +98,5 @@ input,select,textarea{border:1px solid #d7deea;border-radius:13px;background:#ff
 .document-kind-correction{display:grid;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(23,105,224,.16)}
 .document-kind-correction small{color:var(--muted,#64748b);font-weight:500;line-height:1.35}
 .document-kind-correction select{width:100%}
+
+.document-import-warning{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:rgba(245,158,11,.13);font-size:.84rem;line-height:1.35;font-weight:700}

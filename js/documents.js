@@ -143,6 +143,35 @@
     for(const pattern of patterns){const m=text.match(pattern);if(m?.[1])return m[1].trim();}
     return '';
   }
+  function cleanVehicleText(value){
+    return String(value||'').replace(/\s+/g,' ').replace(/[|;]+$/,'').trim();
+  }
+  function registrationFields(text){
+    const make=cleanVehicleText(matchValue(text,[
+      /(?:\bD\.1\b|marca)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 .'-]{1,30})/i,
+      /(?:costruttore)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 .'-]{1,30})/i
+    ]));
+    const model=cleanVehicleText(matchValue(text,[
+      /(?:\bD\.3\b|denominazione commerciale|modello)\s*[:\-]?\s*([A-Z0-9][A-Z0-9 ._\/-]{1,45})/i
+    ]));
+    const vin=matchValue(text,[
+      /(?:\bE\b|numero (?:del )?telaio|telaio|vin)\s*[:\-]?\s*([A-HJ-NPR-Z0-9]{11,17})/i,
+      /\b([A-HJ-NPR-Z0-9]{17})\b/i
+    ]).replace(/\s/g,'').toUpperCase();
+    const firstRegistration=firstDate(text,['prima immatricolazione','data di prima immatricolazione','immatricolazione','\bB\b']);
+    const displacement=numberFrom(matchValue(text,[/(?:\bP\.1\b|cilindrata)\s*[:\-]?\s*(\d{2,5})/i]));
+    const powerKw=numberFrom(matchValue(text,[/(?:\bP\.2\b|potenza(?: massima)?(?: netta)?(?: in kw)?)\s*[:\-]?\s*(\d{1,3}(?:[.,]\d)?)/i]));
+    const seats=numberFrom(matchValue(text,[/(?:\bS\.1\b|posti a sedere|numero posti)\s*[:\-]?\s*(\d{1,2})/i]));
+    let fuel=cleanVehicleText(matchValue(text,[/(?:\bP\.3\b|alimentazione|combustibile)\s*[:\-]?\s*([A-ZÀ-Ü /-]{3,30})/i]));
+    const fuelLower=fuel.toLocaleLowerCase('it-IT');
+    if(/benzina/.test(fuelLower))fuel='Benzina';
+    else if(/gasolio|diesel/.test(fuelLower))fuel='Diesel';
+    else if(/elettric/.test(fuelLower))fuel='Elettrica';
+    else if(/ibrid/.test(fuelLower))fuel='Ibrida';
+    else if(/gpl/.test(fuelLower))fuel='GPL';
+    else if(/metano/.test(fuelLower))fuel='Metano';
+    return {make,model,vin,firstRegistration,displacement,powerKw,seats,fuel};
+  }
   function bestAmount(text){
     const patterns=[
       /(?:totale\s+(?:da\s+pagare|documento|fattura)?|importo\s+(?:pagato|totale)?|corrispettivo|pagato)\s*[:€]?\s*(\d{1,5}[.,]\d{2})/ig,
@@ -190,8 +219,8 @@
     add('registration',14,/ministero delle infrastrutture|repubblica italiana/, 'ente emittente');
     add('registration',12,/numero di omologazione|numero del telaio|identificazione del veicolo|vin/, 'telaio/VIN');
     add('registration',10,/cilindrata|massa complessiva|massa a vuoto|potenza massima|prima immatricolazione/, 'dati tecnici');
-    add('registration',10,/(?:a\.1|c\.1\.1|c\.2\.1|d\.1|d\.2|d\.3|e|f\.1|j|p\.1|p\.2|p\.3|s\.1)/i, 'campi armonizzati UE');
-    add('registration',8,/targa[\s\S]{0,160}telaio|veicolo[\s\S]{0,160}cilindrata/, 'struttura veicolo');
+    add('registration',10,/\b(?:a\.1|c\.1\.1|c\.2\.1|d\.1|d\.2|d\.3|e|f\.1|j|p\.1|p\.2|p\.3|s\.1)\b/i, 'campi armonizzati UE');
+    add('registration',8,/\btarga\b[\s\S]{0,160}\btelaio\b|\bveicolo\b[\s\S]{0,160}\bcilindrata\b/, 'struttura veicolo');
 
     add('revision',24,/certificato di revisione|esito della revisione|rapporto di revisione/, 'certificato revisione');
     add('revision',12,/revisione[\s\S]{0,80}(regolare|ripetere|sospeso)|prossima revisione/, 'esito/scadenza revisione');
@@ -202,7 +231,7 @@
     add('fuel',16,/litri\s*(?:erogati|totali)?|volume\s*erogato|quantit[aà]\s*litri/, 'litri erogati');
     add('fuel',14,/erogazione|pompa\s*\d+|self service|distributore carburanti/, 'impianto carburante');
     add('fuel',12,/documento commerciale[\s\S]{0,180}(benzina|gasolio|diesel|gpl|carburante)/, 'documento commerciale carburante');
-    add('fuel',2,/benzina|gasolio|diesel|gpl/, 'tipo carburante');
+    add('fuel',2,/\bbenzina\b|\bgasolio\b|\bdiesel\b|\bgpl\b/, 'tipo carburante');
 
     add('insurance',22,/certificato di assicurazione|contratto di assicurazione|polizza\s*(?:n|numero)|rc auto|r\.c\.a\.?/, 'polizza RCA');
     add('insurance',9,/compagnia assicur|premio assicurativo|attestato di rischio/, 'dati assicurativi');
@@ -240,6 +269,7 @@
     const policy=matchValue(text,[/(?:numero polizza|polizza n\.?|n\. polizza)\s*[:\-]?\s*([A-Z0-9\/-]+)/i]);
     const invoice=matchValue(text,[/(?:fattura|documento)\s*(?:n\.?|numero)?\s*[:\-]?\s*([A-Z0-9\/-]+)/i]);
     const expiry=explicitExpiry||(kind==='revision'&&date?addYears(date,2):'');
+    const registration=kind==='registration'?registrationFields(text):{};
     const category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',generic:'Altro'}[kind];
     const titleBase={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',generic:'Documento'}[kind];
     const cleanFileName=fileName.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
@@ -249,7 +279,7 @@
     const title=kind==='registration'
       ? `Libretto di circolazione${registrationName?` ${registrationName}`:''}`
       : `${titleBase}${date?` ${date.slice(0,4)}`:''}`;
-    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice};
+    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice,...registration};
     const summaryParts=[];
     if(amount!=null)summaryParts.push(`importo ${money(amount)}`);
     if(business)summaryParts.push(business);
@@ -287,16 +317,31 @@
       field('Luogo',extraction.location),field('Targa',extraction.plate),
       field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''),field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''),
       field('Prezzo/litro',extraction.pricePerLiter?`${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`:''),
-      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('N. polizza/fattura',extraction.policy||extraction.invoice)
+      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('N. polizza/fattura',extraction.policy||extraction.invoice),
+      field('Marca',extraction.make),field('Modello',extraction.model),field('Telaio (VIN)',extraction.vin),
+      field('Prima immatricolazione',extraction.firstRegistration?formatDate(extraction.firstRegistration):''),
+      field('Alimentazione',extraction.fuel),field('Cilindrata',extraction.displacement?`${extraction.displacement.toLocaleString('it-IT')} cm³`:''),
+      field('Potenza',extraction.powerKw?`${extraction.powerKw.toLocaleString('it-IT')} kW`:''),field('Posti',extraction.seats)
     ].join('')||field('Risultato','Testo letto, ma nessun dato strutturato riconosciuto');
     panel.classList.remove('hidden');
     if($('documentDetectedKind'))$('documentDetectedKind').value=extraction.kind;
-    const canCreate=['fuel','revision','insurance','tax','tires','maintenance'].includes(extraction.kind);
+    const canCreate=['fuel','revision','insurance','tax','tires','maintenance','registration'].includes(extraction.kind);
     const row=$('documentCreateEventRow');
     row?.classList.toggle('hidden',!canCreate);
     if($('documentCreateEventText'))$('documentCreateEventText').textContent={
-      fuel:'Registra anche il rifornimento nella sezione Carburante',revision:'Registra anche revisione e prossima scadenza',insurance:'Registra anche la scadenza RCA',tax:'Registra anche la scadenza del bollo',tires:'Registra anche la manutenzione gomme',maintenance:'Registra anche la manutenzione'
+      fuel:'Registra anche il rifornimento nella sezione Carburante',revision:'Registra anche revisione e prossima scadenza',insurance:'Registra anche la scadenza RCA',tax:'Registra anche la scadenza del bollo',tires:'Registra anche la manutenzione gomme',maintenance:'Registra anche la manutenzione',registration:'Aggiorna la scheda del veicolo con i dati del libretto'
     }[extraction.kind]||'Registra anche questi dati nell’app';
+    const checkbox=$('documentCreateEvent');
+    if(checkbox){
+      const hasUsefulRegistration=extraction.kind!=='registration'||Boolean(extraction.plate||extraction.make||extraction.model||extraction.vin||extraction.firstRegistration);
+      checkbox.checked=canCreate&&extraction.confidence>=70&&hasUsefulRegistration;
+    }
+    const warning=$('documentImportWarning');
+    if(warning){
+      const needsReview=canCreate&&extraction.confidence<70;
+      warning.textContent=needsReview?'Affidabilità bassa: controlla e correggi i dati prima di attivare l’importazione automatica.':'';
+      warning.classList.toggle('hidden',!needsReview);
+    }
   }
   function applyDetectedKind(kind){
     if(!currentExtraction||!kind)return;
@@ -330,6 +375,13 @@
     if(extraction.result)notes.push(`Esito: ${extraction.result}`);
     if(extraction.policy)notes.push(`Polizza: ${extraction.policy}`);
     if(extraction.invoice)notes.push(`Documento: ${extraction.invoice}`);
+    if(extraction.make)notes.push(`Marca: ${extraction.make}`);
+    if(extraction.model)notes.push(`Modello: ${extraction.model}`);
+    if(extraction.vin)notes.push(`Telaio: ${extraction.vin}`);
+    if(extraction.firstRegistration)notes.push(`Prima immatricolazione: ${formatDate(extraction.firstRegistration)}`);
+    if(extraction.fuel)notes.push(`Alimentazione: ${extraction.fuel}`);
+    if(extraction.displacement)notes.push(`Cilindrata: ${extraction.displacement.toLocaleString('it-IT')} cm³`);
+    if(extraction.powerKw)notes.push(`Potenza: ${extraction.powerKw.toLocaleString('it-IT')} kW`);
     if(notes.length&&!$('documentNotes').value.trim())$('documentNotes').value=notes.join('\n').slice(0,500);
   }
 
@@ -398,7 +450,20 @@
     const data=window.MiaAutoStorage.loadData();
     const id=()=>crypto.randomUUID?.()||`id_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const date=extraction.date||new Date().toISOString().slice(0,10);
-    if(extraction.kind==='fuel'){
+    if(extraction.kind==='registration'){
+      const vehicle=data.vehicle||{};
+      const combinedName=[extraction.make,extraction.model].filter(Boolean).join(' ').trim();
+      if(combinedName)vehicle.name=combinedName;
+      if(extraction.firstRegistration)vehicle.year=extraction.firstRegistration.slice(0,4);
+      if(extraction.fuel)vehicle.fuel=extraction.fuel;
+      if(extraction.plate)vehicle.plate=extraction.plate;
+      if(extraction.vin)vehicle.vin=extraction.vin;
+      if(extraction.firstRegistration)vehicle.firstRegistration=extraction.firstRegistration;
+      if(extraction.displacement)vehicle.displacement=Number(extraction.displacement);
+      if(extraction.powerKw)vehicle.powerKw=Number(extraction.powerKw);
+      if(extraction.seats)vehicle.seats=Number(extraction.seats);
+      data.vehicle=vehicle;
+    }else if(extraction.kind==='fuel'){
       data.fuel.push({id:id(),date,odometer:Number(extraction.km||0),liters:Number(extraction.liters||0),pricePerLiter:Number(extraction.pricePerLiter||0),total:Number(extraction.amount||0),station:extraction.business||'',location:extraction.location||'',lat:null,lng:null,fullTank:false,source:'document-ocr'});
     }else if(extraction.kind==='revision'){
       data.maintenance.push({id:id(),type:`Revisione${extraction.result?` (${extraction.result})`:''}`,date,km:Number(extraction.km||0),cost:Number(extraction.amount||0),location:extraction.location||extraction.business||'',lat:null,lng:null,source:'document-ocr'});
