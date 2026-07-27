@@ -1,0 +1,10 @@
+{
+  "name": "La Mia Auto",
+  "short_name": "Mia Auto",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#2563eb",
+  "lang": "it-IT",
+  "description": "Gestione auto, scadenze, rifornimenti, spese e manutenzione."
+}

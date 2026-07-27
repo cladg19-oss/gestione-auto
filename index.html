@@ -1,257 +1,424 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1f6feb">
-
-    <title>La Mia Auto</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f3f5f7;
-            color: #1f2937;
-            padding-bottom: 90px;
-        }
-
-        header {
-            background: #1f6feb;
-            color: white;
-            padding: 22px 18px;
-            border-radius: 0 0 24px 24px;
-        }
-
-        header h1 {
-            font-size: 26px;
-            margin-bottom: 6px;
-        }
-
-        header p {
-            opacity: 0.9;
-        }
-
-        main {
-            padding: 18px;
-            max-width: 700px;
-            margin: auto;
-        }
-
-        .auto-card {
-            background: white;
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-        }
-
-        .auto-card h2 {
-            margin-bottom: 8px;
-        }
-
-        .targa {
-            display: inline-block;
-            background: #eef4ff;
-            color: #1f6feb;
-            padding: 6px 10px;
-            border-radius: 8px;
-            margin-top: 8px;
-            font-weight: bold;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
-        }
-
-        .stat-card span {
-            display: block;
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .stat-card strong {
-            font-size: 21px;
-        }
-
-        .section-title {
-            font-size: 20px;
-            margin: 22px 0 12px;
-        }
-
-        .scadenza {
-            background: white;
-            border-radius: 14px;
-            padding: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
-        }
-
-        .scadenza-info h3 {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .scadenza-info p {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .badge {
-            padding: 7px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .verde {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .giallo {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 4px;
-            box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.12);
-        }
-
-        nav button {
-            border: none;
-            background: transparent;
-            font-size: 12px;
-            color: #4b5563;
-            padding: 6px;
-        }
-
-        nav button span {
-            display: block;
-            font-size: 22px;
-            margin-bottom: 3px;
-        }
-
-        nav button.active {
-            color: #1f6feb;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1769e0">
+  <title>La Mia Auto</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <header class="topbar">
+    <div>
+      <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
+    </div>
+    <div class="topbar-actions"><span class="version-badge">V 9.2.2</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+  </header>
 
-<header>
-    <h1>🚗 La Mia Auto</h1>
-    <p>Tutto sotto controllo</p>
-</header>
+  <main class="container">
+    <section id="home" class="view active">
+      <article class="dashboard-hero">
+        <div class="dashboard-vehicle">
+          <span class="vehicle-label">Veicolo principale</span>
+          <h2 id="vehicleName">Toyota Aygo</h2>
+          <p id="vehicleMeta">2017 · Benzina</p>
+          <span class="plate" id="vehiclePlate">TARGA</span>
+        </div>
+        <div class="dashboard-score">
+          <div class="score-circle"><strong id="healthScore">0</strong><span>/100</span></div>
+          <small>Stato auto</small>
+        </div>
+      </article>
 
-<main>
+      <section class="smart-summary-grid">
+        <article class="smart-card smart-deadline"><span class="smart-icon">📅</span><div><small>Prossima scadenza</small><strong id="smartNextDeadline">Nessuna</strong><p id="smartNextDeadlineDate">Aggiungi una scadenza</p></div></article>
+        <article class="smart-card"><span class="smart-icon">💶</span><div><small>Spese questo mese</small><strong id="smartMonthExpenses">€ 0,00</strong><p id="smartMonthOperations">0 operazioni</p></div></article>
+        <article class="smart-card"><span class="smart-icon">⛽</span><div><small>Ultimo rifornimento</small><strong id="smartLastFuel">Nessuno</strong><p id="smartLastFuelDetail">Inserisci il primo pieno</p></div></article>
+        <article class="smart-card"><span class="smart-icon">🔧</span><div><small>Ultima manutenzione</small><strong id="smartLastMaintenance">Nessuna</strong><p id="smartLastMaintenanceDetail">Nessun intervento registrato</p></div></article>
+      </section>
 
-    <section class="auto-card">
-        <h2>Toyota Aygo</h2>
-        <p>Anno 2017 · Benzina</p>
-        <div class="targa">INSERISCI TARGA</div>
+      <section class="intelligent-home-grid">
+        <article class="assistant-card">
+          <div class="assistant-card-heading"><div><span class="vehicle-label">Assistente di bordo</span><h2>Da sapere oggi</h2></div><span class="assistant-spark">✦</span></div>
+          <div id="smartSuggestions" class="suggestion-list"></div>
+        </article>
+        <article class="month-comparison-card">
+          <span class="vehicle-label">Andamento dei costi</span>
+          <h2>Confronto mensile</h2>
+          <strong id="monthComparisonValue">Nessun confronto</strong>
+          <p id="monthComparisonText">Servono dati in almeno due mesi.</p>
+          <div class="comparison-track"><span id="monthComparisonBar"></span></div>
+        </article>
+      </section>
+
+      <div class="section-heading compact-heading"><h2>Azioni rapide</h2></div>
+      <section class="quick-actions">
+        <button class="quick-action" type="button" data-modal="fuelModal"><span>⛽</span><strong>Rifornimento</strong></button>
+        <button class="quick-action" type="button" data-modal="expenseModal"><span>💶</span><strong>Spesa</strong></button>
+        <button class="quick-action" type="button" data-modal="maintenanceModal"><span>🔧</span><strong>Manutenzione</strong></button>
+        <button class="quick-action" type="button" data-modal="deadlineModal"><span>📅</span><strong>Scadenza</strong></button>
+      </section>
+
+      <section class="stats-grid dashboard-stats">
+        <article class="stat-card"><span>Chilometri</span><strong id="statKm">0 km</strong></article>
+        <article class="stat-card"><span>Spese totali</span><strong id="statExpenses">€ 0,00</strong></article>
+        <article class="stat-card"><span>Prossima scadenza</span><strong id="statDeadline">Nessuna</strong></article>
+        <article class="stat-card"><span>Consumo medio</span><strong id="statConsumption">-- km/l</strong></article>
+      </section>
+
+      <section class="health-score-card dashboard-health-copy">
+        <div><span class="vehicle-label">Valutazione intelligente</span><h2 id="healthScoreLabel">Da configurare</h2><p id="healthScoreText">Inserisci scadenze e manutenzioni per ottenere una valutazione.</p></div>
+      </section>
+
+      <section class="health-card">
+        <div class="health-title">
+          <div><span class="vehicle-label">Controllo generale</span><h2 id="healthHeading">Stato del veicolo</h2></div>
+          <span id="healthBadge" class="health-badge ok">Tutto regolare</span>
+        </div>
+        <div id="healthList" class="health-list"></div>
+      </section>
+
+      <section class="insight-grid">
+        <article class="insight-card"><small>Spese anno</small><strong id="smartYearExpenses">€ 0,00</strong></article>
+        <article class="insight-card"><small>Costo indicativo/km</small><strong id="smartCostKm">€ 0,00</strong></article>
+        <article class="insight-card"><small>Manutenzioni registrate</small><strong id="smartMaintenanceCount">0</strong></article>
+      </section>
+
+      <div class="section-heading"><h2>Attività recenti</h2><span class="section-note">Tutta la storia più recente</span></div>
+      <section id="recentActivity" class="recent-activity"></section>
+
+      <div class="section-heading"><h2>Spese ultimi 6 mesi</h2></div>
+      <section class="chart-card"><div id="monthlyChart" class="bar-chart"></div></section>
+
+      <div class="section-heading"><h2>Ultimi rifornimenti</h2><button class="link-btn" data-open="fuel">Vedi tutti</button></div>
+      <div id="homeFuelList" class="list"></div>
+
+      <div class="section-heading"><h2>Prossime scadenze</h2><button class="link-btn" data-open="deadlines">Vedi tutte</button></div>
+      <div id="homeDeadlines" class="list"></div>
     </section>
 
-    <section class="stats">
-        <div class="stat-card">
-            <span>Chilometri</span>
-            <strong>0 km</strong>
+    <section id="timeline" class="view">
+      <div class="section-heading timeline-heading">
+        <div><p class="eyebrow dark">Cronologia completa</p><h2>Timeline dell’auto</h2></div>
+        <span id="timelineCount" class="timeline-count">0 eventi</span>
+      </div>
+      <section class="timeline-tools">
+        <label class="timeline-search"><span>🔎</span><input id="timelineSearch" type="search" placeholder="Cerca tagliando, benzina, RCA…" autocomplete="off"></label>
+        <div class="timeline-filters" role="group" aria-label="Filtra la Timeline">
+          <button class="timeline-filter active" type="button" data-timeline-filter="all">Tutto</button>
+          <button class="timeline-filter" type="button" data-timeline-filter="fuel">Rifornimenti</button>
+          <button class="timeline-filter" type="button" data-timeline-filter="expense">Spese</button>
+          <button class="timeline-filter" type="button" data-timeline-filter="maintenance">Manutenzioni</button>
+          <button class="timeline-filter" type="button" data-timeline-filter="deadline">Scadenze</button>
         </div>
-
-        <div class="stat-card">
-            <span>Spese del mese</span>
-            <strong>€ 0,00</strong>
-        </div>
-
-        <div class="stat-card">
-            <span>Prossima scadenza</span>
-            <strong>RCA</strong>
-        </div>
-
-        <div class="stat-card">
-            <span>Consumo medio</span>
-            <strong>-- km/l</strong>
-        </div>
+      </section>
+      <div id="timelineList" class="timeline-list"></div>
     </section>
 
-    <h2 class="section-title">Prossime scadenze</h2>
+    <section id="deadlines" class="view">
+      <div class="section-heading">
+        <h2>Scadenze</h2>
+        <button class="primary" data-modal="deadlineModal">+ Aggiungi</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter active" data-filter="all">Tutte</button>
+        <button class="filter" data-filter="urgent">Urgenti</button>
+        <button class="filter" data-filter="expired">Scadute</button>
+      </div>
+      <div id="deadlineList" class="list"></div>
+    </section>
 
-    <div class="scadenza">
-        <div class="scadenza-info">
-            <h3>Assicurazione RCA</h3>
-            <p>Data da inserire</p>
+    <section id="fuel" class="view">
+      <div class="section-heading">
+        <h2>Rifornimenti</h2>
+        <button class="primary" data-modal="fuelModal">+ Aggiungi</button>
+      </div>
+
+      <section class="stats-grid fuel-stats">
+        <article class="stat-card"><span>Litri totali</span><strong id="fuelTotalLiters">0 l</strong></article>
+        <article class="stat-card"><span>Spesa carburante</span><strong id="fuelTotalCost">€ 0,00</strong></article>
+        <article class="stat-card"><span>Media km/l</span><strong id="fuelAvgKmL">--</strong></article>
+        <article class="stat-card"><span>Media l/100 km</span><strong id="fuelAvgL100">--</strong></article>
+      </section>
+
+      <div id="fuelList" class="list"></div>
+    </section>
+
+    <section id="expenses" class="view">
+      <div class="section-heading">
+        <h2>Spese</h2>
+        <button class="primary" data-modal="expenseModal">+ Aggiungi</button>
+      </div>
+      <div id="expenseList" class="list"></div>
+    </section>
+
+    <section id="maintenance" class="view">
+      <div class="section-heading">
+        <h2>Manutenzione</h2>
+        <button class="primary" data-modal="maintenanceModal">+ Aggiungi</button>
+      </div>
+      <div id="maintenanceList" class="list"></div>
+    </section>
+
+    <section id="garage" class="view">
+      <h2>Garage</h2>
+      <form id="vehicleForm" class="form-card">
+        <label>Marca e modello<input id="vehicleNameInput" type="text" placeholder="Toyota Aygo"></label>
+        <label>Anno<input id="vehicleYearInput" type="number" min="1900" max="2100" placeholder="2017"></label>
+        <label>Alimentazione<input id="vehicleFuelInput" type="text" placeholder="Benzina"></label>
+        <label>Targa<input id="vehiclePlateInput" type="text" maxlength="10" placeholder="AB123CD"></label>
+        <label>Chilometri attuali<input id="vehicleKmInput" type="number" min="0" placeholder="0"></label>
+        <button class="primary full" type="submit">Salva veicolo</button>
+      </form>
+      <section class="backup-card">
+        <h2>Backup e ripristino</h2><p>Esporta tutti i dati in un file e conservalo in un posto sicuro.</p>
+        <div class="backup-actions"><button id="exportBtn" class="primary" type="button">⬇️ Esporta backup</button><label class="secondary upload-label">⬆️ Importa backup<input id="importInput" type="file" accept=".json,application/json"></label></div>
+        <p id="backupMessage" class="backup-message"></p>
+      </section>
+    </section>
+
+
+    <section id="documents" class="view">
+      <div class="section-heading documents-heading">
+        <div><p class="eyebrow dark">Archivio personale</p><h2>Documenti dell’auto</h2></div>
+        <button id="addDocumentBtn" class="primary" type="button">+ Aggiungi</button>
+      </div>
+      <section class="documents-summary">
+        <article><span>📂</span><div><small>Documenti salvati</small><strong id="documentsCount">0</strong></div></article>
+        <article><span>💾</span><div><small>Spazio utilizzato</small><strong id="documentsSize">0 KB</strong></div></article>
+      </section>
+      <section class="documents-tools">
+        <label class="timeline-search"><span>🔎</span><input id="documentsSearch" type="search" placeholder="Cerca RCA, libretto, tagliando…" autocomplete="off"></label>
+        <select id="documentsCategoryFilter" aria-label="Filtra per categoria">
+          <option value="all">Tutte le categorie</option>
+          <option>Libretto di circolazione</option><option>Assicurazione RCA</option><option>Bollo auto</option>
+          <option>Revisione</option><option>Manutenzione e fatture</option><option>Gomme</option>
+          <option>Foto del veicolo</option><option>Preventivi</option><option>Altro</option>
+        </select>
+      </section>
+      <p id="documentsMessage" class="documents-message" role="status"></p>
+      <div id="documentsList" class="documents-grid"></div>
+    </section>
+
+    <section id="settings" class="view">
+      <div class="section-heading settings-heading">
+        <div><p class="eyebrow dark">Configurazione</p><h2>Impostazioni</h2></div>
+        <button class="secondary" type="button" data-open="home">← Home</button>
+      </div>
+
+      <section class="settings-card">
+        <div class="settings-row">
+          <div><strong>Aspetto</strong><p>Scegli il tema dell'app.</p></div>
+          <select id="themeSelect" aria-label="Tema dell'app">
+            <option value="system">Automatico</option>
+            <option value="light">Chiaro</option>
+            <option value="dark">Scuro</option>
+          </select>
         </div>
-        <div class="badge giallo">Da compilare</div>
+      </section>
+
+      <section class="settings-card">
+        <h3>Novità</h3>
+        <p class="settings-copy"><strong>Versione 9.2.2 · Build 00044</strong></p>
+        <ul class="clean-list">
+          <li>Nuovo archivio documenti con PDF, immagini, ricerca e anteprima.</li>
+          <li>Confronto delle spese con il mese precedente.</li>
+          <li>Stato auto spiegato con criticità e azioni consigliate.</li>
+          <li>Attività recenti riunite direttamente nella Home.</li>
+        </ul>
+      </section>
+
+      <section class="settings-card">
+        <h3>🚧 Roadmap</h3>
+        <div class="roadmap-item"><span>9.2.2</span><p>✅ Riconoscimento corretto del libretto e classificazione OCR con punteggio di affidabilità.</p></div>
+        <div class="roadmap-item"><span>9.2.1</span><p>✅ Scansione intelligente OCR e compilazione automatica dei dati.</p></div>
+        <div class="roadmap-item"><span>9.2.0</span><p>✅ Archivio documenti con ricerca, categorie e anteprima.</p></div>
+        <div class="roadmap-item"><span>9.1.0</span><p>✅ Timeline completa con ricerca, filtri e scheda dettaglio.</p></div>
+        <div class="roadmap-item"><span>8.6.0</span><p>Timeline completa della storia dell'auto.</p></div>
+        <div class="roadmap-item"><span>8.7.0</span><p>Archivio documenti, foto, PDF e OCR migliorato.</p></div>
+        <div class="roadmap-item"><span>8.8.0</span><p>Account, backup cloud e sincronizzazione.</p></div>
+        <div class="roadmap-item"><span>9.0.1</span><p>Preparazione e pubblicazione negli store.</p></div>
+      </section>
+
+      <section class="settings-card app-info">
+        <h3>ℹ️ Informazioni</h3>
+        <dl>
+          <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
+          <div><dt>Versione</dt><dd>9.2.2</dd></div>
+          <div><dt>Build</dt><dd>00044</dd></div>
+          <div><dt>Aggiornamento</dt><dd>26 luglio 2026</dd></div>
+        </dl>
+        <p class="storage-note">I dati e i documenti restano memorizzati sul dispositivo. Il backup JSON del Garage non include ancora i file dell’archivio documenti.</p>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="home"><span>🏠</span>Home</button>
+    <button class="nav-btn" data-view="timeline"><span>🕘</span>Timeline</button>
+    <button class="nav-btn" data-view="deadlines"><span>📅</span>Scadenze</button>
+    <button class="nav-btn" data-view="fuel"><span>⛽</span>Rifornimenti</button>
+    <button class="nav-btn" data-view="expenses"><span>💶</span>Spese</button>
+    <button class="nav-btn" data-view="maintenance"><span>🔧</span>Manutenzione</button>
+    <button class="nav-btn" data-view="documents"><span>📂</span>Documenti</button>
+    <button class="nav-btn" data-view="garage"><span>🚙</span>Garage</button>
+  </nav>
+
+  <dialog id="deadlineModal">
+    <form id="deadlineForm" method="dialog" class="modal-card">
+      <div class="modal-head"><h3>Nuova scadenza</h3><button type="button" class="close">✕</button></div>
+      <label>Tipo
+        <select id="deadlineTypePreset">
+          <option value="">Scegli una categoria</option>
+          <option>Assicurazione RCA</option>
+          <option>Bollo auto</option>
+          <option>Revisione</option>
+          <option>Tagliando</option>
+          <option>Cambio gomme</option>
+          <option>Patente</option>
+          <option>Altro</option>
+        </select>
+      </label>
+      <label>Nome scadenza<input id="deadlineType" required placeholder="Assicurazione RCA"></label>
+      <label>Data<input id="deadlineDate" type="date" required></label>
+      <label>Chilometri registrati<input id="deadlineKm" type="number" min="0" placeholder="Es. 120000"></label>
+      <label>Centro revisioni o posizione<input id="deadlineLocation" type="text" placeholder="Es. Centro Revisioni Rossi, Merate"></label>
+      <div class="location-actions">
+        <button id="deadlineUseLocation" class="secondary" type="button">📍 Usa posizione attuale</button>
+        <span id="deadlineLocationStatus" class="location-status"></span>
+      </div>
+      <label>Note<textarea id="deadlineNotes" rows="3"></textarea></label>
+      <button class="primary full" type="submit">Salva scadenza</button>
+    </form>
+  </dialog>
+
+  <dialog id="fuelModal">
+    <form id="fuelForm" method="dialog" class="modal-card">
+      <div class="modal-head"><h3>Nuovo rifornimento</h3><button type="button" class="close">✕</button></div>
+      <label>Data<input id="fuelDate" type="date" required></label>
+      <label>Chilometri dell'auto<input id="fuelOdometer" type="number" min="0" required placeholder="141500"></label>
+      <label>Litri<input id="fuelLiters" type="number" step="0.01" min="0.01" required placeholder="30,00"></label>
+      <label>Prezzo al litro (€)<input id="fuelPricePerLiter" type="number" step="0.001" min="0" placeholder="1,799"></label>
+      <label>Totale pagato (€)<input id="fuelTotal" type="number" step="0.01" min="0" placeholder="53,97"></label>
+      <label>Distributore<input id="fuelStation" type="text" placeholder="Nome distributore"></label>
+      <label>Posizione o indirizzo<input id="fuelLocation" type="text" placeholder="Es. Via Roma 10, Merate"></label>
+      <div class="location-actions">
+        <button id="fuelUseLocation" class="secondary" type="button">📍 Usa posizione attuale</button>
+        <span id="fuelLocationStatus" class="location-status"></span>
+      </div>
+      <label class="check-label"><input id="fuelFullTank" type="checkbox" checked> Pieno completo</label>
+      <p class="form-note">Per calcolare correttamente i consumi, registra preferibilmente due pieni completi consecutivi.</p>
+      <button class="primary full" type="submit">Salva rifornimento</button>
+    </form>
+  </dialog>
+
+  <dialog id="expenseModal">
+    <form id="expenseForm" method="dialog" class="modal-card">
+      <div class="modal-head"><h3>Nuova spesa</h3><button type="button" class="close">✕</button></div>
+      <label>Categoria<input id="expenseCategory" required placeholder="Parcheggio"></label>
+      <label>Importo<input id="expenseAmount" type="number" step="0.01" min="0" required></label>
+      <label>Data<input id="expenseDate" type="date" required></label>
+      <label>Posizione o indirizzo<input id="expenseLocation" type="text" placeholder="Es. Autolavaggio, Via Milano 5"></label>
+      <div class="location-actions">
+        <button id="expenseUseLocation" class="secondary" type="button">📍 Usa posizione attuale</button>
+        <span id="expenseLocationStatus" class="location-status"></span>
+      </div>
+      <label>Note<textarea id="expenseNotes" rows="3"></textarea></label>
+      <button class="primary full" type="submit">Salva spesa</button>
+    </form>
+  </dialog>
+
+  <dialog id="maintenanceModal">
+    <form id="maintenanceForm" method="dialog" class="modal-card">
+      <div class="modal-head"><h3>Nuova manutenzione</h3><button type="button" class="close">✕</button></div>
+      <label>Intervento<input id="maintenanceType" required placeholder="Cambio olio"></label>
+      <label>Data<input id="maintenanceDate" type="date" required></label>
+      <label>Chilometri<input id="maintenanceKm" type="number" min="0"></label>
+      <label>Costo<input id="maintenanceCost" type="number" step="0.01" min="0"></label>
+      <label>Officina o posizione<input id="maintenanceLocation" type="text" placeholder="Es. Officina Rossi, Bergamo"></label>
+      <div class="location-actions">
+        <button id="maintenanceUseLocation" class="secondary" type="button">📍 Usa posizione attuale</button>
+        <span id="maintenanceLocationStatus" class="location-status"></span>
+      </div>
+      <button class="primary full" type="submit">Salva manutenzione</button>
+    </form>
+  </dialog>
+
+
+  <dialog id="timelineDetailModal">
+    <div class="modal-card timeline-detail-card">
+      <div class="modal-head"><h3 id="timelineDetailTitle">Dettaglio evento</h3><button type="button" class="close">✕</button></div>
+      <div id="timelineDetailBody" class="timeline-detail-body"></div>
+      <div class="timeline-detail-actions">
+        <button id="timelineOpenSource" class="primary full" type="button">Apri nella sezione</button>
+      </div>
     </div>
+  </dialog>
 
-    <div class="scadenza">
-        <div class="scadenza-info">
-            <h3>Revisione</h3>
-            <p>Data da inserire</p>
-        </div>
-        <div class="badge verde">Regolare</div>
+
+  <dialog id="documentModal">
+    <form id="documentForm" class="modal-card document-form">
+      <div class="modal-head"><h3>Nuovo documento</h3><button type="button" class="close">✕</button></div>
+      <label>Titolo<input id="documentTitle" type="text" required maxlength="80" placeholder="Polizza RCA 2026"></label>
+      <label>Categoria<select id="documentCategory" required>
+        <option value="">Scegli una categoria</option><option>Libretto di circolazione</option><option>Assicurazione RCA</option>
+        <option>Bollo auto</option><option>Revisione</option><option>Manutenzione e fatture</option><option>Gomme</option>
+        <option>Foto del veicolo</option><option>Preventivi</option><option>Altro</option>
+      </select></label>
+      <label>Data del documento<input id="documentDate" type="date"></label>
+      <label>File PDF o immagine<input id="documentFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif" required></label>
+      <p class="form-note">Dimensione massima consigliata: 12 MB. Il documento viene analizzato automaticamente sul dispositivo. Al primo utilizzo può servire una connessione per caricare il motore OCR.</p>
+      <div id="documentScanStatus" class="document-scan-status hidden" role="status">
+        <div class="scan-status-head"><strong id="documentScanLabel">Analisi documento…</strong><span id="documentScanPercent">0%</span></div>
+        <div class="scan-progress"><span id="documentScanBar"></span></div>
+      </div>
+      <section id="documentExtractedPanel" class="document-extracted-panel hidden">
+        <div class="extracted-panel-head"><span>✨</span><div><strong>Dati riconosciuti</strong><small>Controllali prima di salvare</small></div></div>
+        <div id="documentExtractedFields" class="extracted-fields"></div>
+        <label id="documentCreateEventRow" class="smart-import-option hidden"><input id="documentCreateEvent" type="checkbox" checked><span id="documentCreateEventText">Registra anche questi dati nell’app</span></label>
+      </section>
+      <label>Note<textarea id="documentNotes" rows="3" maxlength="500" placeholder="Numero polizza, compagnia, dettagli…"></textarea></label>
+      <button id="saveDocumentBtn" class="primary full" type="submit">Salva documento</button>
+    </form>
+  </dialog>
+
+  <dialog id="documentPreviewModal" class="document-preview-dialog">
+    <div class="modal-card document-preview-card">
+      <div class="modal-head"><div><small id="documentPreviewCategory"></small><h3 id="documentPreviewTitle">Documento</h3></div><button type="button" class="close">✕</button></div>
+      <div id="documentPreviewArea" class="document-preview-area"></div>
+      <p id="documentPreviewMeta" class="document-preview-meta"></p>
+      <p id="documentPreviewNotes" class="document-preview-notes"></p>
+      <div class="document-actions">
+        <a id="documentDownloadBtn" class="secondary" download>⬇️ Scarica</a>
+        <button id="documentDeleteBtn" class="danger-button" type="button">🗑️ Elimina</button>
+      </div>
     </div>
+  </dialog>
 
-    <div class="scadenza">
-        <div class="scadenza-info">
-            <h3>Bollo auto</h3>
-            <p>Data da inserire</p>
-        </div>
-        <div class="badge giallo">Da compilare</div>
+  <dialog id="welcomeModal" class="welcome-dialog">
+    <div class="welcome-shell">
+      <button id="welcomeSkip" class="welcome-skip" type="button">Salta</button>
+      <div class="welcome-visual" id="welcomeVisual">
+        <span class="welcome-app-mark">◆</span>
+      </div>
+      <div class="welcome-copy">
+        <p class="welcome-kicker" id="welcomeKicker">Benvenuto</p>
+        <h2 id="welcomeTitle">Tutta la tua auto, in un solo posto</h2>
+        <p id="welcomeText">Registra spese, rifornimenti, manutenzioni e scadenze senza perdere la storia del veicolo.</p>
+      </div>
+      <div class="welcome-dots" aria-label="Avanzamento">
+        <span class="active"></span><span></span><span></span>
+      </div>
+      <button id="welcomeNext" class="primary full welcome-next" type="button">Continua</button>
     </div>
+  </dialog>
 
-</main>
-
-<nav>
-    <button class="active">
-        <span>🏠</span>
-        Home
-    </button>
-
-    <button>
-        <span>📅</span>
-        Scadenze
-    </button>
-
-    <button>
-        <span>💶</span>
-        Spese
-    </button>
-
-    <button>
-        <span>🔧</span>
-        Manutenzione
-    </button>
-</nav>
-
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/events.js"></script>
+  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="js/documents.js"></script>
 </body>
 </html>
