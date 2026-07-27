@@ -13,7 +13,7 @@
     <div>
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.2.2</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.2.3</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
   <main class="container">
@@ -231,6 +231,7 @@
 
       <section class="settings-card">
         <h3>🚧 Roadmap</h3>
+        <div class="roadmap-item"><span>9.2.3</span><p>✅ OCR più affidabile, indice di confidenza e correzione manuale del tipo documento.</p></div>
         <div class="roadmap-item"><span>9.2.2</span><p>✅ Riconoscimento corretto del libretto e classificazione OCR con punteggio di affidabilità.</p></div>
         <div class="roadmap-item"><span>9.2.1</span><p>✅ Scansione intelligente OCR e compilazione automatica dei dati.</p></div>
         <div class="roadmap-item"><span>9.2.0</span><p>✅ Archivio documenti con ricerca, categorie e anteprima.</p></div>
@@ -376,6 +377,19 @@
       <section id="documentExtractedPanel" class="document-extracted-panel hidden">
         <div class="extracted-panel-head"><span>✨</span><div><strong>Dati riconosciuti</strong><small>Controllali prima di salvare</small></div></div>
         <div id="documentExtractedFields" class="extracted-fields"></div>
+        <label class="document-kind-correction">Tipo riconosciuto
+          <select id="documentDetectedKind">
+            <option value="registration">Libretto di circolazione</option>
+            <option value="fuel">Rifornimento carburante</option>
+            <option value="revision">Revisione</option>
+            <option value="insurance">Assicurazione RCA</option>
+            <option value="tax">Bollo auto</option>
+            <option value="maintenance">Manutenzione e fatture</option>
+            <option value="tires">Gomme e pneumatici</option>
+            <option value="generic">Documento generico</option>
+          </select>
+          <small>Se il riconoscimento non è corretto, cambialo qui prima di salvare.</small>
+        </label>
         <label id="documentCreateEventRow" class="smart-import-option hidden"><input id="documentCreateEvent" type="checkbox" checked><span id="documentCreateEventText">Registra anche questi dati nell’app</span></label>
       </section>
       <label>Note<textarea id="documentNotes" rows="3" maxlength="500" placeholder="Numero polizza, compagnia, dettagli…"></textarea></label>

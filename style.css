@@ -93,3 +93,8 @@ input,select,textarea{border:1px solid #d7deea;border-radius:13px;background:#ff
 .smart-import-option{display:flex;align-items:flex-start;gap:.6rem;margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(37,99,235,.18);font-weight:600;font-size:.88rem}
 .smart-import-option input{width:19px;height:19px;margin-top:.05rem;flex:none}
 @media(max-width:520px){.extracted-fields{grid-template-columns:1fr}}
+
+/* 9.2.3 — Correzione guidata OCR */
+.document-kind-correction{display:grid;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(23,105,224,.16)}
+.document-kind-correction small{color:var(--muted,#64748b);font-weight:500;line-height:1.35}
+.document-kind-correction select{width:100%}

@@ -165,40 +165,68 @@
     return lines.slice(0,12).find(line=>line.length>3&&line.length<80&&!skip.test(line)&&!/^\d/.test(line))||'';
   }
   function classify(text,fileName=''){
-    const t=`${fileName}\n${text}`.toLocaleLowerCase('it-IT');
-    const scores={registration:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0};
-    const add=(kind,points,re)=>{if(re.test(t))scores[kind]+=points;};
+    const body=normalizeText(text).toLocaleLowerCase('it-IT');
+    const name=String(fileName||'').replace(/[_-]+/g,' ').toLocaleLowerCase('it-IT');
+    const scores={registration:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0,generic:0};
+    const reasons={};
+    const add=(kind,points,re,label,scope=body)=>{
+      if(re.test(scope)){
+        scores[kind]+=points;
+        (reasons[kind]??=[]).push(label||String(re));
+      }
+    };
 
-    // Il libretto contiene spesso parole come "benzina" o "diesel":
-    // per questo i segnali strutturali della carta di circolazione hanno priorità.
-    add('registration',12,/carta di circolazione|certificato di immatricolazione|libretto di circolazione/);
-    add('registration',7,/numero di omologazione|numero del telaio|vin|cilindrata|massa complessiva|prima immatricolazione/);
-    add('registration',5,/\b(?:a\.?1|b|c\.?1\.?1|d\.?1|e|p\.?1|p\.?2|p\.?3|s\.?1)\b/);
-    add('registration',4,/\btarga\b.*\btelaio\b|\bveicolo\b.*\bcilindrata\b/s);
+    // Il nome del file è un indizio forte, ma non basta da solo per creare eventi economici.
+    add('registration',18,/carta.{0,8}circolazione|libretto|circolazione/, 'nome file: libretto',name);
+    add('revision',15,/revisione|revisioni/, 'nome file: revisione',name);
+    add('insurance',15,/rca|assicurazione|polizza/, 'nome file: assicurazione',name);
+    add('tax',15,/bollo|tassa automobilistica/, 'nome file: bollo',name);
+    add('fuel',12,/carburante|rifornimento|benzinaio|scontrino/, 'nome file: carburante',name);
+    add('tires',12,/gomme|pneumatici/, 'nome file: gomme',name);
+    add('maintenance',10,/tagliando|manutenzione|officina|fattura/, 'nome file: manutenzione',name);
 
-    add('revision',10,/certificato di revisione|centro revisioni|esito\s*(?:della)?\s*revisione/);
-    add('revision',6,/revisione.*(?:regolare|ripetere|sospeso)|prossima revisione/);
-    add('fuel',8,/erogazione|prezzo\s*(?:al|per)?\s*litro|€\/\s*l|litri\s+erogati/);
-    add('fuel',5,/documento commerciale.*(?:carburante|benzina|diesel|gasolio)|self service/);
-    add('fuel',2,/\bcarburante|\bbenzina|\bdiesel|\bgasolio/);
-    add('insurance',9,/polizza|certificato di assicurazione|rc auto|r\.c\.a|compagnia assicur/);
-    add('tax',9,/bollo auto|tassa automobilistica|aci.*bollo|regione.*automobil/);
-    add('tires',8,/pneumatic|equilibratura|convergenza|cambio gomme/);
-    add('maintenance',7,/tagliando|officina|ricambi|manodopera|olio motore/);
-    add('maintenance',3,/fattura/);
+    // Segnali strutturali specifici della carta di circolazione italiana/UE.
+    add('registration',30,/carta di circolazione|certificato di immatricolazione/, 'intestazione ufficiale');
+    add('registration',14,/ministero delle infrastrutture|repubblica italiana/, 'ente emittente');
+    add('registration',12,/numero di omologazione|numero del telaio|identificazione del veicolo|vin/, 'telaio/VIN');
+    add('registration',10,/cilindrata|massa complessiva|massa a vuoto|potenza massima|prima immatricolazione/, 'dati tecnici');
+    add('registration',10,/(?:a\.1|c\.1\.1|c\.2\.1|d\.1|d\.2|d\.3|e|f\.1|j|p\.1|p\.2|p\.3|s\.1)/i, 'campi armonizzati UE');
+    add('registration',8,/targa[\s\S]{0,160}telaio|veicolo[\s\S]{0,160}cilindrata/, 'struttura veicolo');
 
+    add('revision',24,/certificato di revisione|esito della revisione|rapporto di revisione/, 'certificato revisione');
+    add('revision',12,/revisione[\s\S]{0,80}(regolare|ripetere|sospeso)|prossima revisione/, 'esito/scadenza revisione');
+    add('revision',6,/centro revisioni|mctc/, 'centro revisione');
+
+    // Un rifornimento richiede indicatori economici e di quantità; "benzina" da sola vale quasi zero.
+    add('fuel',18,/prezzo\s*(?:al|per)?\s*litro|€\s*\/\s*l|eur\s*\/\s*l/, 'prezzo al litro');
+    add('fuel',16,/litri\s*(?:erogati|totali)?|volume\s*erogato|quantit[aà]\s*litri/, 'litri erogati');
+    add('fuel',14,/erogazione|pompa\s*\d+|self service|distributore carburanti/, 'impianto carburante');
+    add('fuel',12,/documento commerciale[\s\S]{0,180}(benzina|gasolio|diesel|gpl|carburante)/, 'documento commerciale carburante');
+    add('fuel',2,/benzina|gasolio|diesel|gpl/, 'tipo carburante');
+
+    add('insurance',22,/certificato di assicurazione|contratto di assicurazione|polizza\s*(?:n|numero)|rc auto|r\.c\.a\.?/, 'polizza RCA');
+    add('insurance',9,/compagnia assicur|premio assicurativo|attestato di rischio/, 'dati assicurativi');
+    add('tax',22,/bollo auto|tassa automobilistica|avviso di scadenza bollo/, 'bollo auto');
+    add('tax',9,/aci[\s\S]{0,80}bollo|regione[\s\S]{0,80}automobil/, 'ente bollo');
+    add('tires',18,/pneumatici|equilibratura|convergenza|cambio gomme|montaggio gomme/, 'lavori gomme');
+    add('maintenance',15,/tagliando|manodopera|ricambi|olio motore|filtro olio|officina/, 'manutenzione');
+    add('maintenance',5,/fattura|preventivo/, 'documento fiscale');
+
+    // Penalità anti-falso-positivo: il libretto può contenere alimentazione "benzina".
+    if(scores.registration>=20){scores.fuel=Math.max(0,scores.fuel-12);scores.maintenance=Math.max(0,scores.maintenance-4);}
     const ranked=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
     const [best,score]=ranked[0];
     const second=ranked[1]?.[1]||0;
-    if(score<4)return 'generic';
-    // Evita classificazioni deboli e ambigue.
-    if(score<7&&score-second<2)return 'generic';
-    return best;
+    let kind=best;
+    if(score<8||((score-second)<4&&score<20))kind='generic';
+    const confidence=kind==='generic'?Math.min(55,Math.max(20,score*4)):Math.min(99,Math.round(55+score*1.4+Math.max(0,score-second)*1.5));
+    return {kind,confidence,scores,reasons:reasons[kind]||[]};
   }
   function extractData(rawText,fileName=''){
     const text=normalizeText(rawText);
     const lines=text.split('\n').map(x=>x.trim()).filter(Boolean);
-    const kind=classify(text,fileName);
+    const classification=classify(text,fileName);
+    const kind=classification.kind;
     const date=firstDate(text,['data revisione','data operazione','data documento','data emissione','data']);
     const amount=kind==='registration'?null:bestAmount(text);
     const location=kind==='registration'?'':findAddress(lines);
@@ -221,7 +249,7 @@
     const title=kind==='registration'
       ? `Libretto di circolazione${registrationName?` ${registrationName}`:''}`
       : `${titleBase}${date?` ${date.slice(0,4)}`:''}`;
-    const fields={kind,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice};
+    const fields={kind,confidence:classification.confidence,date,amount,location,business,plate,km,liters,pricePerLiter,expiry,result,policy,invoice};
     const summaryParts=[];
     if(amount!=null)summaryParts.push(`importo ${money(amount)}`);
     if(business)summaryParts.push(business);
@@ -254,7 +282,7 @@
     if(!panel||!fields)return;
     const kindLabel={fuel:'Rifornimento carburante',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione',registration:'Libretto',generic:'Documento generico'}[extraction.kind];
     fields.innerHTML=[
-      field('Tipo',kindLabel),field('Data',extraction.date?formatDate(extraction.date):''),
+      field('Tipo',kindLabel),field('Affidabilità',`${extraction.confidence||0}%`),field('Data',extraction.date?formatDate(extraction.date):''),
       field('Importo',extraction.amount!=null?money(extraction.amount):''),field('Attività',extraction.business),
       field('Luogo',extraction.location),field('Targa',extraction.plate),
       field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''),field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''),
@@ -262,6 +290,7 @@
       field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('N. polizza/fattura',extraction.policy||extraction.invoice)
     ].join('')||field('Risultato','Testo letto, ma nessun dato strutturato riconosciuto');
     panel.classList.remove('hidden');
+    if($('documentDetectedKind'))$('documentDetectedKind').value=extraction.kind;
     const canCreate=['fuel','revision','insurance','tax','tires','maintenance'].includes(extraction.kind);
     const row=$('documentCreateEventRow');
     row?.classList.toggle('hidden',!canCreate);
@@ -269,6 +298,22 @@
       fuel:'Registra anche il rifornimento nella sezione Carburante',revision:'Registra anche revisione e prossima scadenza',insurance:'Registra anche la scadenza RCA',tax:'Registra anche la scadenza del bollo',tires:'Registra anche la manutenzione gomme',maintenance:'Registra anche la manutenzione'
     }[extraction.kind]||'Registra anche questi dati nell’app';
   }
+  function applyDetectedKind(kind){
+    if(!currentExtraction||!kind)return;
+    currentExtraction.kind=kind;
+    currentExtraction.category={fuel:'Altro',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione e fatture',registration:'Libretto di circolazione',generic:'Altro'}[kind]||'Altro';
+    const labels={fuel:'Ricevuta carburante',revision:'Revisione auto',insurance:'Polizza RCA',tax:'Bollo auto',tires:'Gomme e pneumatici',maintenance:'Fattura manutenzione',registration:'Libretto di circolazione',generic:'Documento'};
+    currentExtraction.title=labels[kind]||'Documento';
+    if(kind==='registration'){
+      currentExtraction.amount=null;currentExtraction.location='';currentExtraction.business='';
+      $('documentCreateEvent')&&( $('documentCreateEvent').checked=false );
+    }
+    $('documentCategory').value=currentExtraction.category;
+    $('documentTitle').value=currentExtraction.title;
+    renderExtraction(currentExtraction);
+  }
+  $('documentDetectedKind')?.addEventListener('change',event=>applyDetectedKind(event.target.value));
+
   function autofillForm(extraction){
     if(!$('documentTitle').value.trim())$('documentTitle').value=extraction.title;
     if(extraction.category)$('documentCategory').value=extraction.category;

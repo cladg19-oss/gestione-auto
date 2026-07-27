@@ -1,5 +1,12 @@
-## 9.2.2 — Build 00044
-- Corretto il falso riconoscimento della carta di circolazione come ricevuta carburante.
+# Changelog
+
+## 9.2.3 — Build 00045
+- Classificazione OCR rafforzata con segnali strutturali specifici per ogni documento.
+- La sola parola benzina non basta più a classificare un libretto come rifornimento.
+- Visualizzazione dell'affidabilità del riconoscimento.
+- Selettore manuale per correggere il tipo di documento prima del salvataggio.
+- Disattivazione automatica della creazione di eventi economici quando si sceglie Libretto.
+
 - Nuova classificazione a punteggio con priorità ai segnali strutturali del libretto.
 - Il nome del file viene usato come ulteriore indizio.
 - Per il libretto non vengono più proposti importi, distributori o attività casuali.
