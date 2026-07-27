@@ -13,9 +13,10 @@
     <div>
       <div class="brand-lockup"><span class="brand-mark" aria-hidden="true"><span class="brand-car">◆</span></span><div><p class="eyebrow" id="todayLabel">Garage personale</p><h1>La Mia Auto</h1></div></div>
     </div>
-    <div class="topbar-actions"><span class="version-badge">V 9.8.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
+    <div class="topbar-actions"><span class="version-badge">V 9.9.0</span><button id="settingsBtn" class="ghost" type="button">⚙️</button><button id="installBtn" class="ghost hidden">Installa</button></div>
   </header>
 
+  <div id="connectionBanner" class="connection-banner hidden" role="status" aria-live="polite"></div>
   <main class="container">
     <section id="home" class="view active">
       <article class="dashboard-hero">
@@ -249,7 +250,7 @@
 
       <section class="settings-card">
         <h3>Novità</h3>
-        <p class="settings-copy"><strong>Versione 9.8.0 · Build 00056</strong></p>
+        <p class="settings-copy"><strong>Versione 9.9.0 · Build 00057</strong></p>
         <ul class="clean-list">
           <li>Nuovo Centro Veicolo con accessi rapidi e interfaccia ridisegnata.</li>
           <li>Quadro annuale dei costi diviso per categoria.</li>
@@ -277,8 +278,8 @@
         <h3>ℹ️ Informazioni</h3>
         <dl>
           <div><dt>Applicazione</dt><dd>La Mia Auto</dd></div>
-          <div><dt>Versione</dt><dd>9.8.0</dd></div>
-          <div><dt>Build</dt><dd>00056</dd></div>
+          <div><dt>Versione</dt><dd>9.9.0</dd></div>
+          <div><dt>Build</dt><dd>00057</dd></div>
           <div><dt>Aggiornamento</dt><dd>27 luglio 2026</dd></div>
         </dl>
         <p class="storage-note">I dati e i documenti restano memorizzati sul dispositivo. Il backup JSON del Garage non include ancora i file dell’archivio documenti.</p>
@@ -297,6 +298,8 @@
     <button class="nav-btn" data-view="garage"><span>🚙</span>Garage</button>
   </nav>
 
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
   <div class="quick-add">
     <button id="quickAddFab" class="quick-add-fab" type="button" aria-expanded="false" aria-label="Aggiungi una nuova voce">＋</button>
     <div id="quickAddMenu" class="quick-add-menu" aria-hidden="true">
@@ -309,7 +312,7 @@
 
   <dialog id="deadlineModal">
     <form id="deadlineForm" method="dialog" class="modal-card">
-      <div class="modal-head"><h3>Nuova scadenza</h3><button type="button" class="close">✕</button></div>
+      <div class="modal-head"><h3 id="deadlineModalTitle">Nuova scadenza</h3><button type="button" class="close">✕</button></div>
       <label>Tipo
         <select id="deadlineTypePreset">
           <option value="">Scegli una categoria</option>
@@ -331,13 +334,13 @@
         <span id="deadlineLocationStatus" class="location-status"></span>
       </div>
       <label>Note<textarea id="deadlineNotes" rows="3"></textarea></label>
-      <button class="primary full" type="submit">Salva scadenza</button>
+      <button id="deadlineSubmitBtn" class="primary full" type="submit">Salva scadenza</button>
     </form>
   </dialog>
 
   <dialog id="fuelModal">
     <form id="fuelForm" method="dialog" class="modal-card">
-      <div class="modal-head"><h3>Nuovo rifornimento</h3><button type="button" class="close">✕</button></div>
+      <div class="modal-head"><h3 id="fuelModalTitle">Nuovo rifornimento</h3><button type="button" class="close">✕</button></div>
       <label>Data<input id="fuelDate" type="date" required></label>
       <label>Chilometri dell'auto<input id="fuelOdometer" type="number" min="0" required placeholder="141500"></label>
       <label>Litri<input id="fuelLiters" type="number" step="0.01" min="0.01" required placeholder="30,00"></label>
@@ -351,13 +354,13 @@
       </div>
       <label class="check-label"><input id="fuelFullTank" type="checkbox" checked> Pieno completo</label>
       <p class="form-note">Per calcolare correttamente i consumi, registra preferibilmente due pieni completi consecutivi.</p>
-      <button class="primary full" type="submit">Salva rifornimento</button>
+      <button id="fuelSubmitBtn" class="primary full" type="submit">Salva rifornimento</button>
     </form>
   </dialog>
 
   <dialog id="expenseModal">
     <form id="expenseForm" method="dialog" class="modal-card">
-      <div class="modal-head"><h3>Nuova spesa</h3><button type="button" class="close">✕</button></div>
+      <div class="modal-head"><h3 id="expenseModalTitle">Nuova spesa</h3><button type="button" class="close">✕</button></div>
       <label>Categoria<input id="expenseCategory" required placeholder="Parcheggio"></label>
       <label>Importo<input id="expenseAmount" type="number" step="0.01" min="0" required></label>
       <label>Data<input id="expenseDate" type="date" required></label>
@@ -367,13 +370,13 @@
         <span id="expenseLocationStatus" class="location-status"></span>
       </div>
       <label>Note<textarea id="expenseNotes" rows="3"></textarea></label>
-      <button class="primary full" type="submit">Salva spesa</button>
+      <button id="expenseSubmitBtn" class="primary full" type="submit">Salva spesa</button>
     </form>
   </dialog>
 
   <dialog id="maintenanceModal">
     <form id="maintenanceForm" method="dialog" class="modal-card">
-      <div class="modal-head"><h3>Nuova manutenzione</h3><button type="button" class="close">✕</button></div>
+      <div class="modal-head"><h3 id="maintenanceModalTitle">Nuova manutenzione</h3><button type="button" class="close">✕</button></div>
       <label>Intervento<input id="maintenanceType" required placeholder="Cambio olio"></label>
       <label>Data<input id="maintenanceDate" type="date" required></label>
       <label>Chilometri<input id="maintenanceKm" type="number" min="0"></label>
@@ -383,7 +386,7 @@
         <button id="maintenanceUseLocation" class="secondary" type="button">📍 Usa posizione attuale</button>
         <span id="maintenanceLocationStatus" class="location-status"></span>
       </div>
-      <button class="primary full" type="submit">Salva manutenzione</button>
+      <button id="maintenanceSubmitBtn" class="primary full" type="submit">Salva manutenzione</button>
     </form>
   </dialog>
 
@@ -485,10 +488,10 @@
   <script src="js/events.js"></script>
   <script src="app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-  <script src="js/ocr/documentClassifier.js?v=00056"></script>
-  <script src="js/ocr/parsers/librettoParser.js?v=00056"></script>
-  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00056"></script>
-  <script src="js/ocr/parsers/assicurazioneParser.js?v=00056"></script>
-  <script src="js/documents.js?v=00056"></script>
+  <script src="js/ocr/documentClassifier.js?v=00057"></script>
+  <script src="js/ocr/parsers/librettoParser.js?v=00057"></script>
+  <script src="js/ocr/parsers/certificatoProprietaParser.js?v=00057"></script>
+  <script src="js/ocr/parsers/assicurazioneParser.js?v=00057"></script>
+  <script src="js/documents.js?v=00057"></script>
 </body>
 </html>

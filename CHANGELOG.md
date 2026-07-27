@@ -1,5 +1,15 @@
 # Changelog
 
+## 9.9.0 — Gestione completa e sicurezza
+
+- Aggiunta la modifica di scadenze, rifornimenti, spese e manutenzioni già registrati.
+- Eliminazione più sicura con possibilità di annullare immediatamente l’operazione.
+- Nuovi messaggi di conferma non invasivi dopo salvataggi, modifiche, backup e ripristini.
+- Indicatore offline: l’app comunica chiaramente quando lavora senza connessione.
+- Migliorati pulsanti, azioni delle schede e comportamento su smartphone.
+- Aggiornata la PWA alla build `00057`.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 ## 9.8.0 — Restyling completo e Centro Veicolo
 - Interfaccia generale ridisegnata con grafica più moderna e coerente.
 - Nuovo Centro Veicolo con accessi rapidi a profilo, documenti, timeline e scadenze.

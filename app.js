@@ -8,6 +8,8 @@ let activeDeadlineFilter='all';
 let activeTimelineFilter='all';
 let timelineSearchTerm='';
 let selectedTimelineEvent=null;
+let editingRecord={kind:null,id:null};
+let lastDeletedRecord=null;
 
 const $=id=>document.getElementById(id);
 const fuelUseLocation=$('fuelUseLocation');
@@ -26,9 +28,64 @@ const deadlineLocationStatus=$('deadlineLocationStatus');
 
 
 
-function saveData(){
+function saveData(message='Modifiche salvate'){
   window.MiaAutoStorage.saveData(data);
   renderAll();
+  if(message)showToast(message);
+}
+
+function showToast(message,{actionLabel='',onAction=null,duration=4200}={}){
+  const region=$('toastRegion');
+  if(!region)return;
+  const toast=document.createElement('div');
+  toast.className='app-toast';
+  const text=document.createElement('span');
+  text.textContent=message;
+  toast.appendChild(text);
+  if(actionLabel&&typeof onAction==='function'){
+    const action=document.createElement('button');
+    action.type='button';action.textContent=actionLabel;
+    action.addEventListener('click',()=>{onAction();toast.remove();},{once:true});
+    toast.appendChild(action);
+  }
+  region.appendChild(toast);
+  requestAnimationFrame(()=>toast.classList.add('visible'));
+  setTimeout(()=>{toast.classList.remove('visible');setTimeout(()=>toast.remove(),220);},duration);
+}
+
+function resetEditor(kind){
+  editingRecord={kind:null,id:null};
+  const labels={deadline:['Nuova scadenza','Salva scadenza'],fuel:['Nuovo rifornimento','Salva rifornimento'],expense:['Nuova spesa','Salva spesa'],maintenance:['Nuova manutenzione','Salva manutenzione']};
+  const pair=labels[kind];if(!pair)return;
+  const title=$(kind+'ModalTitle'),submit=$(kind+'SubmitBtn');
+  if(title)title.textContent=pair[0];if(submit)submit.textContent=pair[1];
+}
+
+function setEditor(kind,id){
+  editingRecord={kind,id};
+  const labels={deadline:['Modifica scadenza','Salva modifiche'],fuel:['Modifica rifornimento','Salva modifiche'],expense:['Modifica spesa','Salva modifiche'],maintenance:['Modifica manutenzione','Salva modifiche']};
+  const pair=labels[kind],title=$(kind+'ModalTitle'),submit=$(kind+'SubmitBtn');
+  if(title)title.textContent=pair[0];if(submit)submit.textContent=pair[1];
+}
+
+function replaceOrPush(collection,item){
+  const index=editingRecord.id?collection.findIndex(x=>x.id===editingRecord.id):-1;
+  if(index>=0)collection[index]={...collection[index],...item,id:editingRecord.id};
+  else collection.push(item);
+}
+
+function removeWithUndo(kind,id){
+  const map={deadline:'deadlines',fuel:'fuel',expense:'expenses',maintenance:'maintenance'};
+  const key=map[kind],collection=data[key];if(!collection)return;
+  const index=collection.findIndex(x=>x.id===id);if(index<0)return;
+  const [record]=collection.splice(index,1);
+  lastDeletedRecord={key,record,index};
+  window.MiaAutoStorage.saveData(data);renderAll();
+  showToast('Voce eliminata',{actionLabel:'Annulla',onAction:()=>{
+    if(!lastDeletedRecord)return;
+    data[lastDeletedRecord.key].splice(lastDeletedRecord.index,0,lastDeletedRecord.record);
+    lastDeletedRecord=null;saveData('Eliminazione annullata');
+  },duration:6500});
 }
 
 const pendingLocations={fuel:null,expense:null,maintenance:null,deadline:null};
@@ -165,6 +222,7 @@ function deadlineCard(item){
       ${clickableLocationContent(item,`<div><h3>${escapeHtml(item.type)}</h3><p>${formatDate(item.date)}${item.km?` · ${Number(item.km).toLocaleString('it-IT')} km`:''}${item.location?` · ${escapeHtml(item.location)}`:''}${item.notes?` · ${escapeHtml(item.notes)}`:''}</p></div>`)}
     </div>
     <div><span class="badge ${color}">${text}</span> ${locationActions(item)}
+          <button class="edit-item" data-edit-deadline="${item.id}" aria-label="Modifica scadenza">✏️</button>
           <button class="delete" data-delete-deadline="${item.id}" aria-label="Elimina scadenza o revisione">🗑️</button></div>
   </article>`;
 }
@@ -221,6 +279,7 @@ function fuelCard(item,index,sorted){
       <strong>${money(item.total)}</strong>
       <small>${cons||'Consumo non calcolabile'}</small>
       ${locationActions(item)}
+      <button class="edit-item" data-edit-fuel="${item.id}" aria-label="Modifica rifornimento">✏️</button>
       <button class="delete" data-delete-fuel="${item.id}" aria-label="Elimina rifornimento">🗑️</button>
     </div>
   </article>`;
@@ -246,6 +305,7 @@ function renderExpenses(){
       <div class="item-actions">
         <strong>${money(x.amount)}</strong>
         ${locationActions(x)}
+        <button class="edit-item" data-edit-expense="${x.id}" aria-label="Modifica spesa">✏️</button>
         <button class="delete" data-delete-expense="${x.id}" aria-label="Elimina spesa">🗑️</button>
       </div>
     </article>`;
@@ -261,6 +321,7 @@ function renderMaintenance(){
       <div class="item-actions">
         <strong>${x.cost?money(x.cost):''}</strong>
         ${locationActions(x)}
+        <button class="edit-item" data-edit-maintenance="${x.id}" aria-label="Modifica manutenzione">✏️</button>
         <button class="delete" data-delete-maintenance="${x.id}" aria-label="Elimina manutenzione">🗑️</button>
       </div>
     </article>`;
@@ -618,6 +679,10 @@ if(quickAddFab&&quickAddMenu){
 
 document.querySelectorAll('[data-modal]').forEach(btn=>btn.addEventListener('click',()=>{
   const dialog=document.getElementById(btn.dataset.modal);
+  const kind=btn.dataset.modal.replace('Modal','');
+  resetEditor(kind);
+  const form=$(kind+'Form');if(form)form.reset();
+  pendingLocations[kind]=null;
   const today=new Date().toISOString().slice(0,10);
   if(btn.dataset.modal==='fuelModal'){fuelDate.value=today;fuelOdometer.value=data.vehicle.km||'';}
   if(btn.dataset.modal==='expenseModal'&&!expenseDate.value)expenseDate.value=today;
@@ -662,8 +727,8 @@ vehicleForm.addEventListener('submit',e=>{
 deadlineForm.addEventListener('submit',e=>{
   e.preventDefault();
   const deadlineGps=pendingLocations.deadline||{};
-  data.deadlines.push({
-    id:crypto.randomUUID(),
+  replaceOrPush(data.deadlines,{
+    id:editingRecord.id||crypto.randomUUID(),
     type:deadlineType.value.trim(),
     date:deadlineDate.value,
     km:Number(deadlineKm ? deadlineKm.value : 0),
@@ -673,33 +738,46 @@ deadlineForm.addEventListener('submit',e=>{
     notes:deadlineNotes.value.trim()
   });
   pendingLocations.deadline=null;
-  deadlineForm.reset();
-  if(deadlineLocationStatus)deadlineLocationStatus.textContent='';deadlineModal.close();saveData();
+  const wasEditing=Boolean(editingRecord.id);resetEditor('deadline');deadlineForm.reset();
+  if(deadlineLocationStatus)deadlineLocationStatus.textContent='';deadlineModal.close();saveData(wasEditing?'Scadenza aggiornata':'Scadenza aggiunta');
 });
 fuelForm.addEventListener('submit',e=>{
   e.preventDefault();
   const total=Number(fuelTotal.value||0)||Number(fuelLiters.value||0)*Number(fuelPricePerLiter.value||0);
   const odometer=Number(fuelOdometer.value);
-  data.fuel.push({id:crypto.randomUUID(),date:fuelDate.value,odometer,liters:Number(fuelLiters.value),pricePerLiter:Number(fuelPricePerLiter.value||0),total,station:fuelStation.value.trim(),location:fuelLocation ? fuelLocation.value.trim() : '',lat:pendingLocations.fuel?.lat??null,lng:pendingLocations.fuel?.lng??null,fullTank:fuelFullTank.checked});pendingLocations.fuel=null;if(fuelLocationStatus)fuelLocationStatus.textContent='';
+  replaceOrPush(data.fuel,{id:editingRecord.id||crypto.randomUUID(),date:fuelDate.value,odometer,liters:Number(fuelLiters.value),pricePerLiter:Number(fuelPricePerLiter.value||0),total,station:fuelStation.value.trim(),location:fuelLocation ? fuelLocation.value.trim() : '',lat:pendingLocations.fuel?.lat??null,lng:pendingLocations.fuel?.lng??null,fullTank:fuelFullTank.checked});pendingLocations.fuel=null;if(fuelLocationStatus)fuelLocationStatus.textContent='';
   if(odometer>Number(data.vehicle.km||0))data.vehicle.km=odometer;
-  fuelForm.reset();fuelModal.close();saveData();
+  const wasEditing=Boolean(editingRecord.id);resetEditor('fuel');fuelForm.reset();fuelModal.close();saveData(wasEditing?'Rifornimento aggiornato':'Rifornimento aggiunto');
 });
 expenseForm.addEventListener('submit',e=>{
   e.preventDefault();
-  data.expenses.push({id:crypto.randomUUID(),category:expenseCategory.value.trim(),amount:Number(expenseAmount.value),date:expenseDate.value,location:expenseLocation ? expenseLocation.value.trim() : '',lat:pendingLocations.expense?.lat??null,lng:pendingLocations.expense?.lng??null,notes:expenseNotes.value.trim()});pendingLocations.expense=null;if(expenseLocationStatus)expenseLocationStatus.textContent='';
-  expenseForm.reset();expenseModal.close();saveData();
+  replaceOrPush(data.expenses,{id:editingRecord.id||crypto.randomUUID(),category:expenseCategory.value.trim(),amount:Number(expenseAmount.value),date:expenseDate.value,location:expenseLocation ? expenseLocation.value.trim() : '',lat:pendingLocations.expense?.lat??null,lng:pendingLocations.expense?.lng??null,notes:expenseNotes.value.trim()});pendingLocations.expense=null;if(expenseLocationStatus)expenseLocationStatus.textContent='';
+  const wasEditing=Boolean(editingRecord.id);resetEditor('expense');expenseForm.reset();expenseModal.close();saveData(wasEditing?'Spesa aggiornata':'Spesa aggiunta');
 });
 maintenanceForm.addEventListener('submit',e=>{
   e.preventDefault();
-  data.maintenance.push({id:crypto.randomUUID(),type:maintenanceType.value.trim(),date:maintenanceDate.value,km:Number(maintenanceKm.value||0),cost:Number(maintenanceCost.value||0),location:maintenanceLocation ? maintenanceLocation.value.trim() : '',lat:pendingLocations.maintenance?.lat??null,lng:pendingLocations.maintenance?.lng??null});pendingLocations.maintenance=null;if(maintenanceLocationStatus)maintenanceLocationStatus.textContent='';
-  maintenanceForm.reset();maintenanceModal.close();saveData();
+  replaceOrPush(data.maintenance,{id:editingRecord.id||crypto.randomUUID(),type:maintenanceType.value.trim(),date:maintenanceDate.value,km:Number(maintenanceKm.value||0),cost:Number(maintenanceCost.value||0),location:maintenanceLocation ? maintenanceLocation.value.trim() : '',lat:pendingLocations.maintenance?.lat??null,lng:pendingLocations.maintenance?.lng??null});pendingLocations.maintenance=null;if(maintenanceLocationStatus)maintenanceLocationStatus.textContent='';
+  const wasEditing=Boolean(editingRecord.id);resetEditor('maintenance');maintenanceForm.reset();maintenanceModal.close();saveData(wasEditing?'Manutenzione aggiornata':'Manutenzione aggiunta');
 });
 document.addEventListener('click',e=>{
-  const d=e.target.dataset;
-  if(d.deleteDeadline){data.deadlines=data.deadlines.filter(x=>x.id!==d.deleteDeadline);saveData();}
-  if(d.deleteFuel){data.fuel=data.fuel.filter(x=>x.id!==d.deleteFuel);saveData();}
-  if(d.deleteExpense){data.expenses=data.expenses.filter(x=>x.id!==d.deleteExpense);saveData();}
-  if(d.deleteMaintenance){data.maintenance=data.maintenance.filter(x=>x.id!==d.deleteMaintenance);saveData();}
+  const button=e.target.closest('button');if(!button)return;
+  const d=button.dataset;
+  if(d.deleteDeadline)removeWithUndo('deadline',d.deleteDeadline);
+  if(d.deleteFuel)removeWithUndo('fuel',d.deleteFuel);
+  if(d.deleteExpense)removeWithUndo('expense',d.deleteExpense);
+  if(d.deleteMaintenance)removeWithUndo('maintenance',d.deleteMaintenance);
+  if(d.editDeadline){
+    const x=data.deadlines.find(v=>v.id===d.editDeadline);if(!x)return;setEditor('deadline',x.id);deadlineType.value=x.type||'';deadlineDate.value=x.date||'';deadlineKm.value=x.km||'';deadlineLocation.value=x.location||'';deadlineNotes.value=x.notes||'';pendingLocations.deadline={lat:x.lat,lng:x.lng};deadlineModal.showModal();
+  }
+  if(d.editFuel){
+    const x=data.fuel.find(v=>v.id===d.editFuel);if(!x)return;setEditor('fuel',x.id);fuelDate.value=x.date||'';fuelOdometer.value=x.odometer||'';fuelLiters.value=x.liters||'';fuelPricePerLiter.value=x.pricePerLiter||'';fuelTotal.value=x.total||'';fuelStation.value=x.station||'';fuelLocation.value=x.location||'';fuelFullTank.checked=Boolean(x.fullTank);pendingLocations.fuel={lat:x.lat,lng:x.lng};fuelModal.showModal();
+  }
+  if(d.editExpense){
+    const x=data.expenses.find(v=>v.id===d.editExpense);if(!x)return;setEditor('expense',x.id);expenseCategory.value=x.category||'';expenseAmount.value=x.amount||'';expenseDate.value=x.date||'';expenseLocation.value=x.location||'';expenseNotes.value=x.notes||'';pendingLocations.expense={lat:x.lat,lng:x.lng};expenseModal.showModal();
+  }
+  if(d.editMaintenance){
+    const x=data.maintenance.find(v=>v.id===d.editMaintenance);if(!x)return;setEditor('maintenance',x.id);maintenanceType.value=x.type||'';maintenanceDate.value=x.date||'';maintenanceKm.value=x.km||'';maintenanceCost.value=x.cost||'';maintenanceLocation.value=x.location||'';pendingLocations.maintenance={lat:x.lat,lng:x.lng};maintenanceModal.showModal();
+  }
 });
 
 let deferredPrompt;
@@ -709,11 +787,21 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 
 document.addEventListener('miaauto:data-changed',()=>{data=window.MiaAutoStorage.loadData();renderAll();});
 
+function updateConnectionStatus(){
+  const banner=$('connectionBanner');if(!banner)return;
+  const offline=!navigator.onLine;
+  banner.classList.toggle('hidden',!offline);
+  banner.textContent=offline?'Sei offline: i dati restano disponibili sul dispositivo.':'';
+}
+window.addEventListener('online',()=>{updateConnectionStatus();showToast('Connessione ripristinata');});
+window.addEventListener('offline',updateConnectionStatus);
+updateConnectionStatus();
+
 initSettings();
 renderAll();
 
-exportBtn.addEventListener('click',()=>{window.MiaAutoStorage.downloadBackup(data);backupMessage.textContent='Backup esportato correttamente.';});
-importInput.addEventListener('change',async()=>{const file=importInput.files[0];if(!file)return;try{data=await window.MiaAutoStorage.readBackupFile(file);saveData();backupMessage.textContent='Backup importato correttamente.';}catch{backupMessage.textContent='Impossibile importare il file: backup non valido.';}importInput.value='';});
+exportBtn.addEventListener('click',()=>{window.MiaAutoStorage.downloadBackup(data);backupMessage.textContent='Backup esportato correttamente.';showToast('Backup esportato');});
+importInput.addEventListener('change',async()=>{const file=importInput.files[0];if(!file)return;try{data=await window.MiaAutoStorage.readBackupFile(file);saveData();backupMessage.textContent='Backup importato correttamente.';showToast('Backup importato');}catch{backupMessage.textContent='Impossibile importare il file: backup non valido.';}importInput.value='';});
 
 
 function initWelcome(){
