@@ -1,3 +1,11 @@
+# Versione 9.3.2 — Build 00048
+
+- Corretto il caso reale in cui un PDF scansionato veniva riconosciuto come documento generico.
+- Il nome file `Certificato di proprietà` forza la categoria corretta anche se l’OCR non legge l’intestazione.
+- Analogo fallback sicuro per `Carta/Libretto di circolazione`.
+- Aggiunto cache-busting al modulo OCR per impedire al browser di riutilizzare il vecchio file JavaScript.
+- Nessuna modifica alla chiave `miaAutoDataV2`.
+
 ## 9.3.1 — Build 00047
 
 - Aggiunta la categoria separata **Certificato di proprietà**.

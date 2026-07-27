@@ -209,6 +209,11 @@
   function classify(text,fileName=''){
     const body=normalizeText(text).toLocaleLowerCase('it-IT');
     const name=String(fileName||'').replace(/[_-]+/g,' ').toLocaleLowerCase('it-IT');
+    // Il nome assegnato dall’utente è determinante per i documenti ufficiali.
+    // Questo evita che un PDF scansionato, con OCR parziale, venga classificato
+    // come generico solo perché l’intestazione non è stata letta.
+    const ownershipFile=/certificato.{0,12}(?:di\s+)?propriet[aà]|\bcdpd\b|certificato.{0,8}pra/.test(name);
+    const registrationFile=/(?:carta|libretto).{0,12}(?:di\s+)?circolazione|certificato.{0,12}immatricolazione/.test(name);
     const scores={registration:0,ownership:0,revision:0,fuel:0,insurance:0,tax:0,tires:0,maintenance:0,generic:0};
     const reasons={};
     const add=(kind,points,re,label,scope=body)=>{
@@ -269,7 +274,19 @@
     const second=ranked[1]?.[1]||0;
     let kind=best;
     if(score<8||((score-second)<4&&score<20))kind='generic';
-    const confidence=kind==='generic'?Math.min(55,Math.max(20,score*4)):Math.min(99,Math.round(55+score*1.4+Math.max(0,score-second)*1.5));
+    // Fallback esplicito sul nome del file per certificato di proprietà e libretto.
+    // Ha priorità sulla lettura OCR incompleta, ma non crea eventi economici.
+    if(ownershipFile){
+      kind='ownership';
+      scores.ownership=Math.max(scores.ownership,80);
+      (reasons.ownership??=[]).push('nome file ufficiale: certificato di proprietà');
+    }else if(registrationFile){
+      kind='registration';
+      scores.registration=Math.max(scores.registration,75);
+      (reasons.registration??=[]).push('nome file ufficiale: carta/libretto di circolazione');
+    }
+    const finalScore=scores[kind]||score;
+    const confidence=kind==='generic'?Math.min(55,Math.max(20,finalScore*4)):Math.min(99,Math.round(55+finalScore*1.4+Math.max(0,finalScore-second)*1.5));
     return {kind,confidence,scores,reasons:reasons[kind]||[]};
   }
   function extractData(rawText,fileName=''){
