@@ -1,3 +1,12 @@
+# 9.5.1 — Importi e date polizza corretti (Build 00052)
+
+- Distinzione tra premio annuale e importo della singola rata.
+- Riconoscimento della rateazione (ad esempio trimestrale).
+- Migliorato il riconoscimento di decorrenza e scadenza nelle frasi con intervallo di copertura.
+- Migliorata l’estrazione del contraente senza includere le etichette successive.
+- I dati assicurativi sono mostrati in campi separati nella scheda di conferma.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 # 9.5.0 — Estrazione dati assicurazione (Build 00051)
 
 - Aggiunto parser dedicato `assicurazioneParser.js`.

@@ -35,21 +35,29 @@
       /\bPOLIZZA\s+([A-Z0-9][A-Z0-9\/.\-]{5,30})\b/i
     ]);
     const plate = first(upper,[/(?:TARGA|VEICOLO)\s*[:\-]?\s*([A-Z]{2}\s*\d{3}\s*[A-Z]{2})/i,/\b([A-Z]{2}\d{3}[A-Z]{2})\b/]).replace(/\s/g,'');
-    const startRaw = first(text,[
-      /(?:decorrenza|dalle ore\s+\d{1,2}[:.,]\d{2}\s+del|validit[aà]\s+dal|inizio copertura)\D{0,25}(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i
+    const coverageRange = text.match(/(?:durata|validit[aà]|copertura)?[^\d]{0,40}(?:dalle?\s+(?:ore\s+)?\d{1,2}[:.,]\d{2}\s+del\s+)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})[^\d]{0,35}(?:alle?\s+(?:ore\s+)?\d{1,2}[:.,]\d{2}\s+del\s+)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i);
+    const startRaw = coverageRange?.[1] || first(text,[
+      /(?:decorrenza|dalle ore\s+\d{1,2}[:.,]\d{2}\s+del|validit[aà]\s+dal|inizio copertura)\D{0,35}(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i
     ]);
-    const expiryRaw = first(text,[
-      /(?:scadenza|fino alle ore\s+\d{1,2}[:.,]\d{2}\s+del|validit[aà]\s+fino\s+al|termine copertura)\D{0,25}(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i
+    const expiryRaw = coverageRange?.[2] || first(text,[
+      /(?:scadenza|fino alle ore\s+\d{1,2}[:.,]\d{2}\s+del|validit[aà]\s+fino\s+al|termine copertura)\D{0,35}(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i
     ]);
-    const premiumRaw = first(text,[
-      /(?:premio\s+(?:totale|annuo|lordo|da pagare)?|totale\s+premio|importo\s+totale)\s*[:€]?\s*(\d{1,5}(?:[.]\d{3})*,\d{2})/i,
-      /(?:premio\s+(?:totale|annuo|lordo|da pagare)?|totale\s+premio|importo\s+totale)\s*[:€]?\s*(\d{1,5}[.]\d{2})/i
+    const annualPremiumRaw = first(text,[
+      /(?:totale\s+da\s+pagare|premio\s+(?:totale|annuo|annuale|lordo)|totale\s+premio|importo\s+annuo)\s*[:€]?\s*(\d{1,5}(?:[.]\d{3})*,\d{2})/i,
+      /(?:totale\s+da\s+pagare|premio\s+(?:totale|annuo|annuale|lordo)|totale\s+premio|importo\s+annuo)\s*[:€]?\s*(\d{1,5}[.]\d{2})/i
     ]);
+    const installmentRaw = first(text,[
+      /(?:al\s+trimestre|rata\s+(?:trimestrale|mensile|semestrale|annuale)|importo\s+rata)\D{0,20}(\d{1,5}(?:[.]\d{3})*,\d{2})\s*€?/i,
+      /(\d{1,5}(?:[.]\d{3})*,\d{2})\s*€?\s*(?:al\s+trimestre|a\s+trimestre|trimestrali?)/i
+    ]);
+    const installmentFrequency = first(text,[/(?:rateazione|frazionamento)\s*[:\-]?\s*(mensile|bimestrale|trimestrale|quadrimestrale|semestrale|annuale)/i]) || (/al\s+trimestre/i.test(text)?'Trimestrale':'');
     const meritClass = first(text,[
       /(?:classe\s+(?:universale|di merito)|classe\s+cu|cu)\s*[:\-]?\s*(\d{1,2})/i,
       /(?:bonus\s*malus)\D{0,30}(\d{1,2})/i
     ]);
-    const insured = first(text,[/(?:assicurato|contraente)\s*[:\-]?\s*([A-ZÀ-ÖØ-Ý][A-ZÀ-ÖØ-Ý' ]{4,60})/i]);
+    const insured = first(text,[
+      /(?:assicurato|contraente)\s*[:\-]?\s*([A-ZÀ-ÖØ-Ý][A-Za-zÀ-ÖØ-öø-ÿ' ]{3,60}?)(?=\s+(?:codice fiscale|cellulare|telefono|email|n\.?\s*polizza|durata|rateazione)\b|$)/i
+    ]);
     const guarantees = [];
     const guaranteeMap = [
       [/\brca\b|responsabilit[aà] civile auto/i,'RCA'], [/furto/i,'Furto'], [/incendio/i,'Incendio'],
@@ -60,7 +68,9 @@
 
     return {
       company: company.replace(/\s+/g,' ').trim(), policyNumber, plate,
-      startDate: isoDate(startRaw), expiry: isoDate(expiryRaw), premium: amount(premiumRaw),
+      startDate: isoDate(startRaw), expiry: isoDate(expiryRaw),
+      premium: amount(annualPremiumRaw), annualPremium: amount(annualPremiumRaw),
+      installmentAmount: amount(installmentRaw), installmentFrequency,
       meritClass, insured: insured.replace(/\s+/g,' ').trim(), guarantees: [...new Set(guarantees)]
     };
   }

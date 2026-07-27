@@ -263,7 +263,8 @@
       field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''),field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''),
       field('Prezzo/litro',extraction.pricePerLiter?`${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`:''),
       field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('Compagnia',extraction.company),field('N. polizza/fattura',extraction.policy||extraction.invoice),
-      field('Decorrenza polizza',extraction.startDate?formatDate(extraction.startDate):''),field('Premio',extraction.premium!=null?money(extraction.premium):''),
+      field('Decorrenza polizza',extraction.startDate?formatDate(extraction.startDate):''),field('Premio annuale',extraction.annualPremium!=null?money(extraction.annualPremium):(extraction.premium!=null?money(extraction.premium):'')),
+      field('Importo rata',extraction.installmentAmount!=null?money(extraction.installmentAmount):''),field('Rateazione',extraction.installmentFrequency),
       field('Classe di merito',extraction.meritClass),field('Contraente/assicurato',extraction.insured),field('Garanzie',Array.isArray(extraction.guarantees)?extraction.guarantees.join(', '):''),
       field('Marca',extraction.make),field('Modello',extraction.model),field('Telaio (VIN)',extraction.vin),
       field('Prima immatricolazione',extraction.firstRegistration?formatDate(extraction.firstRegistration):''),
@@ -325,7 +326,10 @@
     if(extraction.company)notes.push(`Compagnia: ${extraction.company}`);
     if(extraction.policy)notes.push(`Polizza: ${extraction.policy}`);
     if(extraction.startDate)notes.push(`Decorrenza: ${formatDate(extraction.startDate)}`);
-    if(extraction.premium!=null)notes.push(`Premio: ${money(extraction.premium)}`);
+    if(extraction.annualPremium!=null)notes.push(`Premio annuale: ${money(extraction.annualPremium)}`);
+    else if(extraction.premium!=null)notes.push(`Premio: ${money(extraction.premium)}`);
+    if(extraction.installmentAmount!=null)notes.push(`Importo rata: ${money(extraction.installmentAmount)}`);
+    if(extraction.installmentFrequency)notes.push(`Rateazione: ${extraction.installmentFrequency}`);
     if(extraction.meritClass)notes.push(`Classe di merito: ${extraction.meritClass}`);
     if(extraction.insured)notes.push(`Contraente/assicurato: ${extraction.insured}`);
     if(Array.isArray(extraction.guarantees)&&extraction.guarantees.length)notes.push(`Garanzie: ${extraction.guarantees.join(', ')}`);
