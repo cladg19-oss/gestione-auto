@@ -53,16 +53,25 @@
     add('fuel',14,/erogazione|pompa\s*\d+|self service|distributore carburanti/,'impianto carburante');
     add('fuel',12,/documento commerciale[\s\S]{0,180}(benzina|gasolio|diesel|gpl|carburante)/,'documento commerciale carburante');
     add('fuel',2,/\bbenzina\b|\bgasolio\b|\bdiesel\b|\bgpl\b/,'tipo carburante');
-    add('insurance',22,/certificato di assicurazione|contratto di assicurazione|polizza\s*(?:n|numero)|rc auto|r\.c\.a\.?/,'polizza RCA');
-    add('insurance',9,/compagnia assicur|premio assicurativo|attestato di rischio/,'dati assicurativi');
+    add('insurance',46,/\bgenertel\b|\bgenerali italia\b|\bunipolsai\b|\ballianz direct\b|\bprima assicurazioni\b|\bverti\b|\bconte\.it\b/,'compagnia assicurativa riconosciuta');
+    add('insurance',34,/certificato di assicurazione|contratto di assicurazione|documento informativo (?:precontrattuale|assicurativo)|polizza\s*(?:n|numero)|rc\s*auto|r\.?\s*c\.?\s*a\.?\s*(?:auto)?/,'polizza RCA');
+    add('insurance',24,/bonus\s*malus|classe\s+(?:universale|di merito)|attestato di rischio|massimale|franchigia|garanzia rca/,'terminologia assicurativa');
+    add('insurance',14,/premio (?:assicurativo|annuo|totale)|contraente|assicurato|decorrenza (?:della )?(?:polizza|copertura)|scadenza (?:della )?(?:polizza|copertura)/,'dati assicurativi');
     add('tax',22,/bollo auto|tassa automobilistica|avviso di scadenza bollo/,'bollo auto');
     add('tax',9,/aci[\s\S]{0,80}bollo|regione[\s\S]{0,80}automobil/,'ente bollo');
     add('tires',18,/pneumatici|equilibratura|convergenza|cambio gomme|montaggio gomme/,'lavori gomme');
     add('maintenance',15,/tagliando|manodopera|ricambi|olio motore|filtro olio|officina/,'manutenzione');
     add('maintenance',5,/fattura|preventivo/,'documento fiscale');
 
+    const hasOfficialRegistrationHeading=/carta di circolazione|certificato di immatricolazione/.test(body);
+    const hasOfficialOwnershipHeading=/certificato (?:digitale )?di propriet[aà]|\bcdpd\b/.test(body);
+    if(scores.insurance >= 34 && !hasOfficialRegistrationHeading){
+      scores.registration = Math.max(0, scores.registration - 24);
+      scores.maintenance = Math.max(0, scores.maintenance - 8);
+      scores.tax = Math.max(0, scores.tax - 6);
+    }
     if(scores.registration >= 20){ scores.fuel = Math.max(0, scores.fuel - 12); scores.maintenance = Math.max(0, scores.maintenance - 4); }
-    if(scores.ownership >= 24){ scores.registration = Math.max(0, scores.registration - 18); scores.fuel = 0; scores.maintenance = Math.max(0, scores.maintenance - 5); }
+    if(scores.ownership >= 24 || hasOfficialOwnershipHeading){ scores.registration = Math.max(0, scores.registration - 18); scores.fuel = 0; scores.maintenance = Math.max(0, scores.maintenance - 5); }
 
     const ranked = Object.entries(scores).sort((a,b) => b[1] - a[1]);
     const [best, score] = ranked[0];

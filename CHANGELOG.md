@@ -1,3 +1,11 @@
+# 9.4.1 — Correzione riconoscimento assicurazione (Build 00050)
+
+- I documenti Genertel e delle principali compagnie assicurative hanno ora priorità assicurativa.
+- Aggiunti indicatori RCA: bonus/malus, classe di merito, massimale, franchigia, premio e decorrenza.
+- I dati tecnici del veicolo presenti in una polizza non causano più la classificazione errata come libretto.
+- Aggiornata la cache PWA per forzare il caricamento del classificatore corretto.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 # 9.4.0 — Fondazione OCR modulare (Build 00049)
 
 - Separato il classificatore documenti in `js/ocr/documentClassifier.js`.
