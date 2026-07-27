@@ -31,7 +31,7 @@
     ];
     const company = companyPatterns.find(([re]) => re.test(text))?.[1] || first(text,[/(?:compagnia|impresa di assicurazione|societ[aà])\s*[:\-]?\s*([^\n]{3,60})/i]);
     const policyNumber = first(text,[
-      /(?:numero\s+(?:di\s+)?polizza|polizza\s*(?:n\.?|numero)?|contratto\s*(?:n\.?|numero))\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/.\-]{4,30})/i,
+      /(?:numero\s+(?:di\s+)?polizza|n\.?\s*polizza|polizza\s*(?:n\.?|numero)?|contratto\s*(?:n\.?|numero))\s*[:\-]?\s*([A-Z0-9][A-Z0-9\/.\-]{4,30})/i,
       /\bPOLIZZA\s+([A-Z0-9][A-Z0-9\/.\-]{5,30})\b/i
     ]);
     const plate = first(upper,[/(?:TARGA|VEICOLO)\s*[:\-]?\s*([A-Z]{2}\s*\d{3}\s*[A-Z]{2})/i,/\b([A-Z]{2}\d{3}[A-Z]{2})\b/]).replace(/\s/g,'');

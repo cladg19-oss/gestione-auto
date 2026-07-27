@@ -1,3 +1,11 @@
+# 9.5.2 — Campi RCA contestuali (Build 00053)
+
+- La polizza RCA non mostra più i campi generici errati “Attività”, “Luogo”, “Chilometri” e “Documento/fattura”.
+- Data e importo generici vengono ignorati per le assicurazioni: vengono usati solo decorrenza, scadenza, premio annuale e rata riconosciuti dal parser RCA.
+- Migliorato il riconoscimento di etichette come “N. Polizza”.
+- Se un dato RCA non è riconosciuto con una regola dedicata, il campo resta vuoto invece di essere riempito con un valore casuale.
+- Chiave dati invariata: `miaAutoDataV2`.
+
 # 9.5.1 — Importi e date polizza corretti (Build 00052)
 
 - Distinzione tra premio annuale e importo della singola rata.

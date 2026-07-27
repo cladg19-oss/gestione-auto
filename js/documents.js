@@ -222,14 +222,34 @@
     const insuranceAmount=insurance.premium!=null?insurance.premium:amount;
     const insurancePlate=insurance.plate||plate;
     const insurancePolicy=insurance.policyNumber||policy;
-    const fields={kind,confidence:classification.confidence,date:kind==='insurance'?insuranceDate:date,amount:kind==='insurance'?insuranceAmount:amount,location,business,plate:kind==='insurance'?insurancePlate:plate,km,liters,pricePerLiter,expiry:kind==='insurance'?insuranceExpiry:expiry,result,policy:kind==='insurance'?insurancePolicy:policy,invoice,...registration,...ownership,...insurance};
+    // I documenti assicurativi contengono molti numeri, date e indirizzi non pertinenti.
+    // Per questo tipo usiamo esclusivamente i campi estratti dal parser RCA e lasciamo
+    // vuoti i dati generici quando il parser non è sufficientemente sicuro.
+    const isInsurance=kind==='insurance';
+    const fields={
+      kind,
+      confidence:classification.confidence,
+      date:isInsurance?insuranceDate:date,
+      amount:isInsurance?insuranceAmount:amount,
+      location:isInsurance?'':location,
+      business:isInsurance?'':business,
+      plate:isInsurance?insurancePlate:plate,
+      km:isInsurance?null:km,
+      liters:isInsurance?null:liters,
+      pricePerLiter:isInsurance?null:pricePerLiter,
+      expiry:isInsurance?insuranceExpiry:expiry,
+      result:isInsurance?'':result,
+      policy:isInsurance?insurancePolicy:policy,
+      invoice:isInsurance?'':invoice,
+      ...registration,...ownership,...insurance
+    };
     const summaryParts=[];
     if(fields.amount!=null)summaryParts.push(`importo ${money(fields.amount)}`);
     if(fields.company)summaryParts.push(fields.company);
     if(fields.policy)summaryParts.push(`polizza ${fields.policy}`);
-    if(business)summaryParts.push(business);
-    if(location)summaryParts.push(location);
-    if(km)summaryParts.push(`${km.toLocaleString('it-IT')} km`);
+    if(fields.business)summaryParts.push(fields.business);
+    if(fields.location)summaryParts.push(fields.location);
+    if(fields.km)summaryParts.push(`${fields.km.toLocaleString('it-IT')} km`);
     if(fields.expiry)summaryParts.push(`scadenza ${formatDate(fields.expiry)}`);
     return {...fields,category,title,summary:summaryParts.join(' · '),text,fileName};
   }
@@ -256,13 +276,16 @@
     const fields=$('documentExtractedFields');
     if(!panel||!fields)return;
     const kindLabel={fuel:'Rifornimento carburante',revision:'Revisione',insurance:'Assicurazione RCA',tax:'Bollo auto',tires:'Gomme',maintenance:'Manutenzione',registration:'Libretto di circolazione',ownership:'Certificato di proprietà',generic:'Documento generico'}[extraction.kind];
+    const showGeneric=extraction.kind!=='insurance';
     fields.innerHTML=[
-      field('Tipo',kindLabel),field('Affidabilità',`${extraction.confidence||0}%`),field('Data',extraction.date?formatDate(extraction.date):''),
-      field('Importo',extraction.amount!=null?money(extraction.amount):''),field('Attività',extraction.business),
-      field('Luogo',extraction.location),field('Targa',extraction.plate),
-      field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''),field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''),
-      field('Prezzo/litro',extraction.pricePerLiter?`${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`:''),
-      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),field('Esito',extraction.result),field('Compagnia',extraction.company),field('N. polizza/fattura',extraction.policy||extraction.invoice),
+      field('Tipo',kindLabel),field('Affidabilità',`${extraction.confidence||0}%`),
+      showGeneric?field('Data',extraction.date?formatDate(extraction.date):''):'',
+      showGeneric?field('Importo',extraction.amount!=null?money(extraction.amount):''):'',
+      showGeneric?field('Attività',extraction.business):'',
+      showGeneric?field('Luogo',extraction.location):'',field('Targa',extraction.plate),
+      showGeneric?field('Chilometri',extraction.km?`${extraction.km.toLocaleString('it-IT')} km`:''):'',showGeneric?field('Litri',extraction.liters?`${extraction.liters.toLocaleString('it-IT')} l`:''):'',
+      showGeneric?field('Prezzo/litro',extraction.pricePerLiter?`${extraction.pricePerLiter.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3})} €/l`:''):'',
+      field('Scadenza',extraction.expiry?formatDate(extraction.expiry):''),showGeneric?field('Esito',extraction.result):'',field('Compagnia',extraction.company),field(extraction.kind==='insurance'?'N. polizza':'N. polizza/fattura',extraction.policy||extraction.invoice),
       field('Decorrenza polizza',extraction.startDate?formatDate(extraction.startDate):''),field('Premio annuale',extraction.annualPremium!=null?money(extraction.annualPremium):(extraction.premium!=null?money(extraction.premium):'')),
       field('Importo rata',extraction.installmentAmount!=null?money(extraction.installmentAmount):''),field('Rateazione',extraction.installmentFrequency),
       field('Classe di merito',extraction.meritClass),field('Contraente/assicurato',extraction.insured),field('Garanzie',Array.isArray(extraction.guarantees)?extraction.guarantees.join(', '):''),
